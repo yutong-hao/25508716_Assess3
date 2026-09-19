@@ -1,0 +1,533 @@
+fileFormatVersion: 2
+guid: e910376f971e64877bfaeec2a2bd1cc0
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 4897800039357212544
+    second: dead_defeated_0
+  - first:
+      213: 6717454242700463104
+    second: dead_defeated_1
+  - first:
+      213: 4132527734872828392
+    second: dead_defeated_2
+  - first:
+      213: -1227192737737831371
+    second: dead_defeated_3
+  - first:
+      213: -7376442899636990569
+    second: dead_defeated_4
+  - first:
+      213: 4449718909612473068
+    second: dead_defeated_5
+  - first:
+      213: 8676309000244648839
+    second: dead_defeated_6
+  - first:
+      213: 5201140286030444035
+    second: dead_defeated_7
+  - first:
+      213: 6978356440969619518
+    second: dead_defeated_8
+  - first:
+      213: -2808612533500860791
+    second: dead_defeated_9
+  - first:
+      213: -8026762230103012654
+    second: dead_defeated_10
+  - first:
+      213: -4915626539306452971
+    second: dead_defeated_11
+  - first:
+      213: -1496860538500113556
+    second: dead_defeated_12
+  - first:
+      213: 5540928859725610717
+    second: dead_defeated_13
+  - first:
+      213: 4532914668531774825
+    second: dead_defeated_14
+  - first:
+      213: 5402707481899063185
+    second: dead_defeated_15
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: dead_defeated_0
+      rect:
+        serializedVersion: 2
+        x: 38
+        y: 40
+        width: 1173
+        height: 1003
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 087e7c6af2b78f340800000000000000
+      internalID: 4897800039357212544
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dead_defeated_1
+      rect:
+        serializedVersion: 2
+        x: 476
+        y: 998
+        width: 144
+        height: 115
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 00c0a1b0b01393d50800000000000000
+      internalID: 6717454242700463104
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dead_defeated_2
+      rect:
+        serializedVersion: 2
+        x: 667
+        y: 976
+        width: 92
+        height: 228
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8e96b8d6410b95930800000000000000
+      internalID: 4132527734872828392
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dead_defeated_3
+      rect:
+        serializedVersion: 2
+        x: 528
+        y: 962
+        width: 26
+        height: 19
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 53c823cf4b228fee0800000000000000
+      internalID: -1227192737737831371
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dead_defeated_4
+      rect:
+        serializedVersion: 2
+        x: 553
+        y: 952
+        width: 9
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 79d4f2dc34c91a990800000000000000
+      internalID: -7376442899636990569
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dead_defeated_5
+      rect:
+        serializedVersion: 2
+        x: 649
+        y: 948
+        width: 9
+        height: 14
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cea3acdc5c390cd30800000000000000
+      internalID: 4449718909612473068
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dead_defeated_6
+      rect:
+        serializedVersion: 2
+        x: 675
+        y: 948
+        width: 7
+        height: 11
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 78b5b111111786870800000000000000
+      internalID: 8676309000244648839
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dead_defeated_7
+      rect:
+        serializedVersion: 2
+        x: 410
+        y: 897
+        width: 15
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 30671d788892e2840800000000000000
+      internalID: 5201140286030444035
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dead_defeated_8
+      rect:
+        serializedVersion: 2
+        x: 197
+        y: 318
+        width: 75
+        height: 55
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e38ad0cc53a18d060800000000000000
+      internalID: 6978356440969619518
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dead_defeated_9
+      rect:
+        serializedVersion: 2
+        x: 281
+        y: 304
+        width: 40
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 986a8fc08cdc509d0800000000000000
+      internalID: -2808612533500860791
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dead_defeated_10
+      rect:
+        serializedVersion: 2
+        x: 931
+        y: 308
+        width: 67
+        height: 57
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2da003287463b9090800000000000000
+      internalID: -8026762230103012654
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dead_defeated_11
+      rect:
+        serializedVersion: 2
+        x: 1023
+        y: 299
+        width: 41
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 518f724e4bf28cbb0800000000000000
+      internalID: -4915626539306452971
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dead_defeated_12
+      rect:
+        serializedVersion: 2
+        x: 579
+        y: 274
+        width: 14
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c6b966c55451a3be0800000000000000
+      internalID: -1496860538500113556
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dead_defeated_13
+      rect:
+        serializedVersion: 2
+        x: 715
+        y: 272
+        width: 8
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ddeb7a9d07555ec40800000000000000
+      internalID: 5540928859725610717
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dead_defeated_14
+      rect:
+        serializedVersion: 2
+        x: 1057
+        y: 183
+        width: 11
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9657ef6efd528ee30800000000000000
+      internalID: 4532914668531774825
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: dead_defeated_15
+      rect:
+        serializedVersion: 2
+        x: 96
+        y: 69
+        width: 14
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 19750fb74d54afa40800000000000000
+      internalID: 5402707481899063185
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      dead_defeated_0: 4897800039357212544
+      dead_defeated_1: 6717454242700463104
+      dead_defeated_10: -8026762230103012654
+      dead_defeated_11: -4915626539306452971
+      dead_defeated_12: -1496860538500113556
+      dead_defeated_13: 5540928859725610717
+      dead_defeated_14: 4532914668531774825
+      dead_defeated_15: 5402707481899063185
+      dead_defeated_2: 4132527734872828392
+      dead_defeated_3: -1227192737737831371
+      dead_defeated_4: -7376442899636990569
+      dead_defeated_5: 4449718909612473068
+      dead_defeated_6: 8676309000244648839
+      dead_defeated_7: 5201140286030444035
+      dead_defeated_8: 6978356440969619518
+      dead_defeated_9: -2808612533500860791
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
