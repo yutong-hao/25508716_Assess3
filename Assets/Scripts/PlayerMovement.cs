@@ -1,32 +1,71 @@
 using UnityEngine;
 
-public class PM : MonoBehaviour
+public class PacStudentMovement : MonoBehaviour
 {
-    public float sp = 4f;
+    public Transform[] points;
+    public float speed = 2f;
 
-    private Rigidbody2D rb;
+    private int currentPoint = 0;
     private Animator animator;
 
-    Vector2 mo;
 
     void Start()
     {
-        rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
     }
 
+
     void Update()
     {
-        mo.x = Input.GetAxisRaw("Horizontal");
-        mo.y = Input.GetAxisRaw("Vertical");
+        if (points.Length == 0)
+            return;
 
-        animator.SetFloat("CatSpeed", mo.sqrMagnitude);
-        animator.SetFloat("movex", mo.x);
-        animator.SetFloat("movey", mo.y);
-    }
 
-    void FixedUpdate()
-    {
-        rb.MovePosition(rb.position + mo.normalized * sp * Time.fixedDeltaTime);
+        Transform target = points[currentPoint];
+
+
+        // calculate movement direction
+        Vector2 direction = target.position - transform.position;
+
+
+        // play correct animation direction
+        if (direction.x > 0.01f)
+        {
+            animator.Play("right");
+        }
+        else if (direction.x < -0.01f)
+        {
+            animator.Play("left");
+        }
+        else if (direction.y > 0.01f)
+        {
+            animator.Play("back");
+        }
+        else if (direction.y < -0.01f)
+        {
+            animator.Play("player-walk");
+        }
+
+
+        // linear movement with frame-rate independence
+        transform.position = Vector2.MoveTowards(
+            transform.position,
+            target.position,
+            speed * Time.deltaTime
+        );
+
+
+        // reach next point
+        if (Vector2.Distance(transform.position, target.position) < 0.05f)
+        {
+            transform.position = target.position;
+
+            currentPoint++;
+
+            if (currentPoint >= points.Length)
+            {
+                currentPoint = 0;
+            }
+        }
     }
 }
