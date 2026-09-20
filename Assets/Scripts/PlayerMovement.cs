@@ -21,6 +21,8 @@ public class PM : MonoBehaviour
         mo.y = Input.GetAxisRaw("Vertical");
 
         animator.SetFloat("CatSpeed", mo.sqrMagnitude);
+        animator.SetFloat("movex", mo.x);
+        animator.SetFloat("movey", mo.y);
     }
 
     void FixedUpdate()

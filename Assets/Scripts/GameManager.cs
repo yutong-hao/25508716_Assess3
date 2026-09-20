@@ -1,31 +1,33 @@
 using UnityEngine;
-using TMPro;
 
-public class GameManager : MonoBehaviour
+public class PacStudentMovement : MonoBehaviour
 {
-    public static GameManager Instance;
+    public Transform[] points;
+    public float speed = 2f;
 
-    public int corn = 0;
-    public TMP_Text cornText; 
+    private int currentPoint = 0;
 
-    void Awake()
+    void Update()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
+        if(points.Length == 0)
             return;
-        }
-        Instance = this;
-    }
 
-    public void AddCorn()
-    {
-        corn++;
-        Debug.Log("Corn: " + corn);
+        Transform target = points[currentPoint];
 
-        if (cornText != null)
+        transform.position = Vector2.MoveTowards(
+            transform.position,
+            target.position,
+            speed * Time.deltaTime
+        );
+
+        if(Vector2.Distance(transform.position, target.position) < 0.05f)
         {
-            cornText.text = "Corn: " + corn;
+            currentPoint++;
+
+            if(currentPoint >= points.Length)
+            {
+                currentPoint = 0;
+            }
         }
     }
 }
