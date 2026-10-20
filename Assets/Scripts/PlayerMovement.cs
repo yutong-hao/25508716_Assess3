@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class PacStudentMovement : MonoBehaviour
+public class PlayerMovement : MonoBehaviour
 {
     public Transform[] points;
     public float speed = 2f;
@@ -17,18 +17,11 @@ public class PacStudentMovement : MonoBehaviour
 
     void Update()
     {
-        if (points.Length == 0)
-            return;
-
-
         Transform target = points[currentPoint];
 
-
-        // calculate movement direction
         Vector2 direction = target.position - transform.position;
 
 
-        // play correct animation direction
         if (direction.x > 0.01f)
         {
             animator.Play("right");
@@ -46,8 +39,6 @@ public class PacStudentMovement : MonoBehaviour
             animator.Play("player-walk");
         }
 
-
-        // linear movement with frame-rate independence
         transform.position = Vector2.MoveTowards(
             transform.position,
             target.position,
@@ -55,12 +46,17 @@ public class PacStudentMovement : MonoBehaviour
         );
 
 
-        // reach next point
-        if (Vector2.Distance(transform.position, target.position) < 0.05f)
+
+    float distance = Vector2.Distance(
+    transform.position,
+    target.position
+);
+
+if (distance < 0.05f)
         {
             transform.position = target.position;
 
-            currentPoint++;
+            currentPoint = currentPoint + 1;
 
             if (currentPoint >= points.Length)
             {

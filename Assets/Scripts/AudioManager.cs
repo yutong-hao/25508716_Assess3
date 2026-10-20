@@ -3,18 +3,15 @@ using System.Collections;
 
 public class AudioManager : MonoBehaviour
 {
-    // Background music
-    public AudioSource intro;
-    public AudioSource ghostNormal;
-
-    // Sound effects
-    public AudioSource eatPellet;
-    public AudioSource eatGhost;
-    public AudioSource bonus;
-    public AudioSource crush;
-    public AudioSource dead;
-    public AudioSource ghostScared;
-
+public AudioSource intro;
+public AudioSource ghostnormal;
+public AudioSource eatpellet;
+public AudioSource bonus;
+public AudioSource crush;
+public AudioSource dead;
+public AudioSource eatghost;
+public AudioSource ghostscared;
+public float introduration = 3f;
 
     void Start()
     {
@@ -23,61 +20,49 @@ public class AudioManager : MonoBehaviour
 
 
     IEnumerator StartGameMusic()
+{
+    intro.Play();
+
+    yield return new WaitForSeconds(introduration);
+
+    intro.Stop();
+
+    ghostnormal.loop = true;
+    ghostnormal.Play();
+}
+      
+    public void Playeatpellet()
     {
-        // Play intro music
-        intro.Play();
-
-
-        // Wait until intro finishes OR 3 seconds pass
-        yield return new WaitForSeconds(
-            Mathf.Min(intro.clip.length, 3f)
-        );
-
-
-        // Stop intro
-        intro.Stop();
-
-
-        // Start normal ghost background music
-        ghostNormal.loop = true;
-        ghostNormal.Play();
+        eatpellet.Play();
     }
 
 
-    // These functions can be called later by gameplay scripts
-
-    public void PlayEatPellet()
+    public void Playeatghost()
     {
-        eatPellet.Play();
+        eatghost.Play();
     }
 
 
-    public void PlayEatGhost()
-    {
-        eatGhost.Play();
-    }
-
-
-    public void PlayBonus()
+    public void Playbonus()
     {
         bonus.Play();
     }
 
 
-    public void PlayCrush()
+    public void Playcrush()
     {
         crush.Play();
     }
 
 
-    public void PlayDead()
+    public void Playdead()
     {
         dead.Play();
     }
 
 
-    public void PlayGhostScared()
+    public void Playghostscared()
     {
-        ghostScared.Play();
+        ghostscared.Play();
     }
 }
