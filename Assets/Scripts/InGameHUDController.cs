@@ -107,7 +107,7 @@ public class InGameHUDController : MonoBehaviour
     {
         if (IsGameOver || !RoundStarted || RemainingPellets <= 0) return;
         RemainingPellets--;
-        if (RemainingPellets == 0 && !deliveryObjective) EndRound("Victory!");
+        if (RemainingPellets == 0 && !deliveryObjective) EndRound("Game Over");
     }
 
     public void CompleteDelivery()
@@ -160,7 +160,7 @@ public class InGameHUDController : MonoBehaviour
         string levelLabel = levelNumber == 1 ? "LEVEL 1  /  MIDNIGHT SNACK CHASE" : "LEVEL 2  /  POPCORN DELIVERY";
         ResultText("LevelLabel", card, levelLabel,
             new Vector2(0f, 209f), new Vector2(480f, 24f), 14f, muted);
-        ResultText("ResultTitle", card, victory ? "VICTORY!" : "GAME OVER",
+        ResultText("ResultTitle", card, levelNumber == 2 && victory ? "VICTORY!" : "GAME OVER",
             new Vector2(0f, 160f), new Vector2(480f, 65f), 48f, victory ? gold : cream);
         ResultSprite("ResultCat", card, victory ? victoryCat : defeatedCat,
             new Vector2(0f, 57f), new Vector2(144f, 112f));
