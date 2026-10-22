@@ -67099,6 +67099,10 @@ MonoBehaviour:
   gridOrigin: {fileID: 186289667}
   cellSize: 0.125
   tilesPerSecond: 5
+  pelletsRoot: {fileID: 1945024094}
+  movementClip: {fileID: 8300000, guid: ff466e6e744aa4a9b9d2fa41cdb30c48, type: 3}
+  pelletMovementClip: {fileID: 8300000, guid: b6cdb6ba70a1d42bea39530ff969c60d, type: 3}
+  movementDustPrefab: {fileID: 4844228779600440320, guid: 26ee0829ae8674572adf6f9290943f87, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
