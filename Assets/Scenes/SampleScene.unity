@@ -64584,6 +64584,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4665777058b0243ffa8f7d6d54cef3dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InGameHUDController
+  scoreText: {fileID: 113166953}
 --- !u!114 &274794048
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -67108,6 +67109,8 @@ MonoBehaviour:
   movementClip: {fileID: 8300000, guid: ff466e6e744aa4a9b9d2fa41cdb30c48, type: 3}
   pelletMovementClip: {fileID: 8300000, guid: b6cdb6ba70a1d42bea39530ff969c60d, type: 3}
   movementDustPrefab: {fileID: 4844228779600440320, guid: 26ee0829ae8674572adf6f9290943f87, type: 3}
+  hud: {fileID: 274794047}
+  wallCollisionClip: {fileID: 8300000, guid: 2d7e81c61c52a47d99ed8c3f21d99fb1, type: 3}
 --- !u!114 &3800000001
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -67130,6 +67133,9 @@ MonoBehaviour:
     width: 3.5
     height: 3.625
   moveSpeed: 0.625
+  player: {fileID: 3700000001}
+  hud: {fileID: 274794047}
+  collectClip: {fileID: 8300000, guid: 35d63348d50934e9cac0ae00d4637426, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
