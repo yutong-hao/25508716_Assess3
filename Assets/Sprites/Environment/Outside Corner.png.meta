@@ -1,13 +1,10 @@
 fileFormatVersion: 2
-guid: 28fc881dce5694ab3ac84f57ed61d192
+guid: ec53a35acfd344c45b047fc64c34cd7a
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: 8078897041468352302
-    second: New Piskel-3.png_0
-  - first:
-      213: -6293325186605392484
-    second: New Piskel-3.png_1
+      213: -2510476293373519475
+    second: New Piskel_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -103,45 +100,23 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: New Piskel-3.png_0
+      name: New Piskel_0
       rect:
         serializedVersion: 2
         x: 0
         y: 0
         width: 32
-        height: 30
+        height: 32
       alignment: 0
-      pivot: {x: 0, y: 0}
+      pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: e27ecad2e020e1070800000000000000
-      internalID: 8078897041468352302
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
-      name: New Piskel-3.png_1
-      rect:
-        serializedVersion: 2
-        x: 18
-        y: 0
-        width: 14
-        height: 21
-      alignment: 0
-      pivot: {x: 0, y: 0}
-      border: {x: 0, y: 0, z: 0, w: 0}
-      customData: 
-      outline: []
-      physicsShape: []
-      tessellationDetail: -1
-      bones: []
-      spriteID: c9ddd54161e99a8a0800000000000000
-      internalID: -6293325186605392484
+      spriteID: d899e6cbc1ff82dd0800000000000000
+      internalID: -2510476293373519475
       vertices: []
       indices: 
       edges: []
@@ -150,7 +125,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 
+    spriteID: 23157ef28c6464b0b8b544969c91684b
     internalID: 0
     vertices: []
     indices: 
@@ -160,8 +135,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      New Piskel-3.png_0: 8078897041468352302
-      New Piskel-3.png_1: -6293325186605392484
+      New Piskel_0: -2510476293373519475
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
