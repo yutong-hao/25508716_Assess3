@@ -16,6 +16,7 @@ public class InGameHUDController : MonoBehaviour
     [SerializeField] private PacStudentController player;
     [SerializeField] private PowerPelletController ghosts;
     [SerializeField] private int levelNumber = 1;
+    [SerializeField] private bool deliveryObjective;
 
     public int Score { get; private set; }
     public int Lives { get; private set; }
@@ -101,16 +102,21 @@ public class InGameHUDController : MonoBehaviour
     {
         if (IsGameOver || !RoundStarted || RemainingPellets <= 0) return;
         RemainingPellets--;
-        if (RemainingPellets == 0) EndRound();
+        if (RemainingPellets == 0 && !deliveryObjective) EndRound();
     }
 
-    private void EndRound()
+    public void CompleteDelivery()
+    {
+        if (deliveryObjective) EndRound("Delivery Complete!");
+    }
+
+    private void EndRound(string message = "Game Over")
     {
         if (IsGameOver || !RoundStarted) return;
         IsGameOver = true;
         gameOverElapsed = 0f;
         controls.interactable = false;
-        countdownText.text = "Game Over";
+        countdownText.text = message;
         countdownOverlay.SetActive(true);
         player.StopForGameOver();
         ghosts.SuspendForPlayerDeath();
