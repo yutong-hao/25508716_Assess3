@@ -59,4 +59,11 @@ public class StartSceneController : MonoBehaviour
         loadingLevel = true;
         SceneManager.LoadScene(levelOneScene);
     }
+
+    public void LoadLevelTwo()
+    {
+        if (loadingLevel) return;
+        loadingLevel = true;
+        SceneManager.LoadScene("InnovationScene");
+    }
 }

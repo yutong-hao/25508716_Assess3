@@ -49,7 +49,7 @@ public class CherryController : MonoBehaviour
 
     private void Update()
     {
-        if (!hud.RoundStarted || hud.IsGameOver) return;
+        if (hud.IsGameOver) return;
         SpriteRenderer previousBonus = activeBonus;
         Vector3 previousBonusPosition = previousBonus != null ? previousBonus.transform.position : Vector3.zero;
         AdvanceBonus(Time.deltaTime);
