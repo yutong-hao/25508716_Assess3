@@ -11,7 +11,7 @@ public class PowerPelletController : MonoBehaviour
         [System.NonSerialized] public Animator animator;
         [System.NonSerialized] public CircleCollider2D collider;
         [System.NonSerialized] public Vector3 spawnPosition;
-        [System.NonSerialized] public float deadRemaining;
+        [System.NonSerialized] public GhostController movement;
     }
 
     [SerializeField] private GhostVisual[] ghosts;
@@ -20,6 +20,7 @@ public class PowerPelletController : MonoBehaviour
     [SerializeField] private PacStudentController player;
 
     public float RemainingTime { get; private set; }
+    public bool CanMoveGhosts => hud.RoundStarted && !hud.IsGameOver && !playerDeathPaused && !player.IsDying;
     private bool recovering;
     private bool playerDeathPaused;
     private BoxCollider2D playerCollider;
@@ -27,8 +28,9 @@ public class PowerPelletController : MonoBehaviour
     private void Start()
     {
         playerCollider = player.GetComponent<BoxCollider2D>();
-        foreach (GhostVisual ghost in ghosts)
+        for (int index = 0; index < ghosts.Length; index++)
         {
+            GhostVisual ghost = ghosts[index];
             ghost.collider = ghost.target.GetComponent<CircleCollider2D>();
             ghost.spawnPosition = ghost.target.transform.position;
             ghost.animator = ghost.target.GetComponent<Animator>();
@@ -37,6 +39,10 @@ public class PowerPelletController : MonoBehaviour
             ghost.animator.applyRootMotion = false;
             ghost.animator.Play("Normal", 0, 0f);
             ghost.animator.Update(0f);
+            ghost.animator.speed = 0f;
+            ghost.movement = ghost.target.GetComponent<GhostController>();
+            if (ghost.movement == null) ghost.movement = ghost.target.AddComponent<GhostController>();
+            ghost.movement.Initialize(index + 1, player, this);
         }
         hud.SetGhostTimer(0f);
     }
@@ -45,7 +51,6 @@ public class PowerPelletController : MonoBehaviour
     {
         if (playerDeathPaused || !hud.RoundStarted || hud.IsGameOver) return;
         AdvanceScaredTimer(Time.deltaTime);
-        AdvanceDeadGhosts(Time.deltaTime);
     }
 
     public bool CheckPlayerContact(Vector3 start, Vector3 end)
@@ -66,43 +71,59 @@ public class PowerPelletController : MonoBehaviour
             float radius = playerRadius + ghost.collider.radius *
                 Mathf.Max(Mathf.Abs(ghost.target.transform.lossyScale.x), Mathf.Abs(ghost.target.transform.lossyScale.y));
             if ((center - nearest).sqrMagnitude > radius * radius) continue;
-            if (ghost.animator.GetCurrentAnimatorStateInfo(0).IsName("Normal"))
-            {
-                player.BeginDeath();
-                return false;
-            }
-            if (ghost.animator.GetCurrentAnimatorStateInfo(0).IsName("Scared") ||
-                ghost.animator.GetCurrentAnimatorStateInfo(0).IsName("Recovering"))
-            {
-                ghost.deadRemaining = 3f;
-                ghost.animator.Play("Dead", 0, 0f);
-                ghost.animator.Update(0f);
-                hud.AddScore(300);
-                audioManager.Playeatghost();
-                audioManager.SetGhostDeadMusic(true);
-            }
+            ResolveContact(ghost);
+            if (!player.CanInteract) return false;
         }
         return true;
     }
 
-    private void AdvanceDeadGhosts(float deltaTime)
+    public void CheckGhostContact(GameObject target, Vector3 start, Vector3 end)
     {
-        bool restored = false;
-        bool anyDead = false;
-        foreach (GhostVisual ghost in ghosts)
+        if (!CanMoveGhosts || !player.CanInteract) return;
+        GhostVisual ghost = System.Array.Find(ghosts, candidate => candidate.target == target);
+        if (ghost == null || IsDead(target) || !ghost.collider.enabled || !target.activeInHierarchy) return;
+        Vector2 offset = target.transform.TransformVector(ghost.collider.offset);
+        Vector2 playerCenter = player.transform.TransformPoint(playerCollider.offset);
+        Vector2 motion = end - start;
+        float fraction = motion.sqrMagnitude > 0f
+            ? Mathf.Clamp01(Vector2.Dot(playerCenter - (Vector2)start - offset, motion) / motion.sqrMagnitude) : 0f;
+        float radius = Mathf.Min(playerCollider.size.x * Mathf.Abs(player.transform.lossyScale.x),
+            playerCollider.size.y * Mathf.Abs(player.transform.lossyScale.y)) * 0.5f +
+            ghost.collider.radius * Mathf.Max(Mathf.Abs(target.transform.lossyScale.x), Mathf.Abs(target.transform.lossyScale.y));
+        if ((playerCenter - ((Vector2)start + offset + motion * fraction)).sqrMagnitude <= radius * radius)
+            ResolveContact(ghost);
+    }
+
+    private void ResolveContact(GhostVisual ghost)
+    {
+        if (IsNormal(ghost.target)) player.BeginDeath();
+        else if (!IsDead(ghost.target))
         {
-            if (ghost.deadRemaining <= 0f) continue;
-            ghost.deadRemaining = Mathf.Max(0f, ghost.deadRemaining - deltaTime);
-            if (ghost.deadRemaining < 0.0001f)
-            {
-                ghost.deadRemaining = 0f;
-                ghost.animator.Play(RemainingTime <= 0f ? "Normal" : RemainingTime <= 3f ? "Recovering" : "Scared", 0, 0f);
-                ghost.animator.Update(0f);
-                restored = true;
-            }
-            else anyDead = true;
+            ghost.animator.Play("Dead", 0, 0f);
+            ghost.animator.Update(0f);
+            hud.AddScore(300);
+            audioManager.Playeatghost();
+            audioManager.SetGhostDeadMusic(true);
         }
-        if (restored) audioManager.SetGhostDeadMusic(anyDead);
+    }
+
+    public bool IsDead(GameObject target)
+    {
+        return target.GetComponent<Animator>().GetCurrentAnimatorStateInfo(0).IsName("Dead");
+    }
+
+    public bool IsNormal(GameObject target)
+    {
+        return target.GetComponent<Animator>().GetCurrentAnimatorStateInfo(0).IsName("Normal");
+    }
+
+    public void RestoreAtHome(GameObject target)
+    {
+        GhostVisual ghost = System.Array.Find(ghosts, candidate => candidate.target == target);
+        if (ghost == null || !IsDead(target) || Vector3.Distance(target.transform.position, ghost.spawnPosition) > 0.0001f) return;
+        ghost.animator.Play(RemainingTime <= 0f ? "Normal" : RemainingTime <= 3f ? "Recovering" : "Scared", 0, 0f);
+        ghost.animator.Update(0f);
+        audioManager.SetGhostDeadMusic(System.Array.Exists(ghosts, candidate => IsDead(candidate.target)));
     }
 
     public void SuspendForPlayerDeath()
@@ -118,8 +139,8 @@ public class PowerPelletController : MonoBehaviour
         playerDeathPaused = false;
         foreach (GhostVisual ghost in ghosts)
         {
-            ghost.deadRemaining = 0f;
             ghost.target.transform.position = ghost.spawnPosition;
+            ghost.movement.ResetMovement();
             ghost.animator.speed = 1f;
             ghost.animator.Play("Normal", 0, 0f);
             ghost.animator.Update(0f);
