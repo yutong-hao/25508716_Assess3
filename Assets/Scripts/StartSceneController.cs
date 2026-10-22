@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class StartSceneController : MonoBehaviour
 {
@@ -7,9 +8,19 @@ public class StartSceneController : MonoBehaviour
     [SerializeField] private RectTransform[] borderSnacks;
     [SerializeField] private float borderSpeed = 75f;
     [SerializeField] private string levelOneScene = "SampleScene";
+    [SerializeField] private TMP_Text[] highScoreTexts;
+    [SerializeField] private TMP_Text[] bestTimeTexts;
 
     private float borderDistance;
     private bool loadingLevel;
+
+    private void Start()
+    {
+        for (int index = 0; index < highScoreTexts.Length; index++)
+            highScoreTexts[index].text = LevelRecords.LoadScore(index + 1).ToString();
+        for (int index = 0; index < bestTimeTexts.Length; index++)
+            bestTimeTexts[index].text = InGameHUDController.FormatTime(LevelRecords.LoadTime(index + 1));
+    }
 
     void LateUpdate()
     {

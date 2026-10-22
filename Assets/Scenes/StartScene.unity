@@ -2994,6 +2994,12 @@ MonoBehaviour:
   - {fileID: 1327087200}
   borderSpeed: 75
   levelOneScene: SampleScene
+  highScoreTexts:
+  - {fileID: 558282586}
+  - {fileID: 580477968}
+  bestTimeTexts:
+  - {fileID: 28142637}
+  - {fileID: 1557084798}
 --- !u!4 &719536345
 Transform:
   m_ObjectHideFlags: 0
