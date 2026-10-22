@@ -17,7 +17,7 @@ public class PacStudentController : MonoBehaviour
 
     public int TeleportVersion { get; private set; }
     public bool IsDying { get; private set; }
-    public bool CanInteract => isActiveAndEnabled && !IsDying && (hud == null || (hud.RoundStarted && hud.Lives > 0));
+    public bool CanInteract => isActiveAndEnabled && !IsDying && (hud == null || (hud.RoundStarted && !hud.IsGameOver && hud.Lives > 0));
 
     private readonly int[,] levelMap =
     {
@@ -114,6 +114,9 @@ public class PacStudentController : MonoBehaviour
         powerPellets = powerPelletsRoot != null
             ? powerPelletsRoot.GetComponentsInChildren<SpriteRenderer>(true)
             : new SpriteRenderer[0];
+        if (hud != null)
+            hud.RegisterPellets(System.Array.FindAll(pellets, pellet => pellet.enabled && pellet.gameObject.activeInHierarchy).Length +
+                System.Array.FindAll(powerPellets, pellet => pellet.enabled && pellet.gameObject.activeInHierarchy).Length);
         if (movementDustPrefab != null)
         {
             movementDust = Instantiate(movementDustPrefab, transform);
@@ -206,6 +209,7 @@ public class PacStudentController : MonoBehaviour
         targetCell = currentCell + currentInput;
         blockedDirection = Vector2Int.zero;
         CollectPellet();
+        if (!CanInteract) return false;
         tweenStart = CellToWorld(currentCell);
         tweenEnd = CellToWorld(targetCell);
         tweenElapsed = 0f;
@@ -252,7 +256,7 @@ public class PacStudentController : MonoBehaviour
         if (deathElapsed < deathDuration) return;
         animator.speed = 0f;
         IsDying = false;
-        if (hud.Lives == 0) return;
+        if (hud.Lives == 0 || hud.IsGameOver) return;
         currentCell = spawnCell;
         targetCell = spawnCell;
         transform.position = CellToWorld(spawnCell);
@@ -275,6 +279,7 @@ public class PacStudentController : MonoBehaviour
 
     private void CollectPellet()
     {
+        if (!CanInteract) return;
         CollectPowerPellet();
         if (pellets == null) return;
         foreach (SpriteRenderer pellet in pellets)
@@ -283,12 +288,17 @@ public class PacStudentController : MonoBehaviour
                 (pellet.transform.position - transform.position).sqrMagnitude >= 0.000001f) continue;
             pellet.gameObject.SetActive(false);
             Destroy(pellet.gameObject);
-            if (hud != null) hud.AddScore(10);
+            if (hud != null)
+            {
+                hud.AddScore(10);
+                hud.PelletCollected();
+            }
         }
     }
 
     private void CollectPowerPellet()
     {
+        if (!CanInteract) return;
         if (powerPellets == null || powerPelletController == null) return;
         foreach (SpriteRenderer pellet in powerPellets)
         {
@@ -296,7 +306,11 @@ public class PacStudentController : MonoBehaviour
                 (pellet.transform.position - transform.position).sqrMagnitude >= 0.000001f) continue;
             pellet.gameObject.SetActive(false);
             Destroy(pellet.gameObject);
-            if (hud != null) hud.AddScore(50);
+            if (hud != null)
+            {
+                hud.AddScore(50);
+                hud.PelletCollected();
+            }
             powerPelletController.Activate();
         }
     }
@@ -383,6 +397,16 @@ public class PacStudentController : MonoBehaviour
         if (movementDust != null && (movementDust.isPlaying || movementDust.particleCount > 0))
             movementDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         feedbackPlaying = false;
+    }
+
+    public void StopForGameOver()
+    {
+        isLerping = false;
+        lastInput = Vector2Int.zero;
+        currentInput = Vector2Int.zero;
+        StopMovementFeedback();
+        if (collisionAudio != null) collisionAudio.Stop();
+        if (wallDust != null) wallDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
     }
 
     private void OnDisable()

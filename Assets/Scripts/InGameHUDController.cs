@@ -13,12 +13,18 @@ public class InGameHUDController : MonoBehaviour
     [SerializeField] private TMP_Text gameTimerText;
     [SerializeField] private CanvasGroup controls;
     [SerializeField] private AudioManager audioManager;
+    [SerializeField] private PacStudentController player;
+    [SerializeField] private PowerPelletController ghosts;
+    [SerializeField] private int levelNumber = 1;
 
     public int Score { get; private set; }
     public int Lives { get; private set; }
     public bool RoundStarted { get; private set; }
     public double ElapsedTime { get; private set; }
+    public bool IsGameOver { get; private set; }
+    public int RemainingPellets { get; private set; }
     private double countdownElapsed;
+    private float gameOverElapsed;
 
     private void Awake()
     {
@@ -47,6 +53,12 @@ public class InGameHUDController : MonoBehaviour
 
     private void AdvanceRound(float deltaTime)
     {
+        if (IsGameOver)
+        {
+            gameOverElapsed += deltaTime;
+            if (gameOverElapsed >= 3f) SceneManager.LoadScene("StartScene");
+            return;
+        }
         if (!RoundStarted)
         {
             countdownElapsed += deltaTime;
@@ -74,8 +86,35 @@ public class InGameHUDController : MonoBehaviour
 
     public void LoseLife()
     {
+        if (IsGameOver) return;
         Lives = Mathf.Max(0, Lives - 1);
         RefreshLives();
+        if (Lives == 0) EndRound();
+    }
+
+    public void RegisterPellets(int count)
+    {
+        RemainingPellets = count;
+    }
+
+    public void PelletCollected()
+    {
+        if (IsGameOver || !RoundStarted || RemainingPellets <= 0) return;
+        RemainingPellets--;
+        if (RemainingPellets == 0) EndRound();
+    }
+
+    private void EndRound()
+    {
+        if (IsGameOver || !RoundStarted) return;
+        IsGameOver = true;
+        gameOverElapsed = 0f;
+        controls.interactable = false;
+        countdownText.text = "Game Over";
+        countdownOverlay.SetActive(true);
+        player.StopForGameOver();
+        ghosts.SuspendForPlayerDeath();
+        LevelRecords.SaveIfBetter(levelNumber, Score, ElapsedTime);
     }
 
     private void RefreshLives()
@@ -93,7 +132,7 @@ public class InGameHUDController : MonoBehaviour
 
     public void AddScore(int points)
     {
-        if (points <= 0) return;
+        if (points <= 0 || IsGameOver) return;
         Score += points;
         RefreshScore();
     }
@@ -105,7 +144,7 @@ public class InGameHUDController : MonoBehaviour
 
     public void ReturnToStartScene()
     {
-        if (!RoundStarted) return;
+        if (!RoundStarted || IsGameOver) return;
         SceneManager.LoadScene("StartScene");
     }
 }

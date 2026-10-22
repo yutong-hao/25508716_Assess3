@@ -64599,6 +64599,9 @@ MonoBehaviour:
   gameTimerText: {fileID: 294062545}
   controls: {fileID: 274794052}
   audioManager: {fileID: 2132831594}
+  player: {fileID: 3700000001}
+  ghosts: {fileID: 3900000001}
+  levelNumber: 1
 --- !u!114 &274794048
 MonoBehaviour:
   m_ObjectHideFlags: 0
