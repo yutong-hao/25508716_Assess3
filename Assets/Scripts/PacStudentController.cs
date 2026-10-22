@@ -9,6 +9,10 @@ public class PacStudentController : MonoBehaviour
     [SerializeField] private AudioClip movementClip;
     [SerializeField] private AudioClip pelletMovementClip;
     [SerializeField] private ParticleSystem movementDustPrefab;
+    [SerializeField] private InGameHUDController hud;
+    [SerializeField] private AudioClip wallCollisionClip;
+
+    public int TeleportVersion { get; private set; }
 
     private readonly int[,] levelMap =
     {
@@ -45,6 +49,9 @@ public class PacStudentController : MonoBehaviour
     private SpriteRenderer[] pellets;
     private string movementState = "right";
     private bool feedbackPlaying;
+    private AudioSource collisionAudio;
+    private ParticleSystem wallDust;
+    private Vector2Int blockedDirection;
 
     private void Start()
     {
@@ -79,6 +86,9 @@ public class PacStudentController : MonoBehaviour
         }
 
         movementAudio = GetComponent<AudioSource>();
+        collisionAudio = gameObject.AddComponent<AudioSource>();
+        collisionAudio.playOnAwake = false;
+        collisionAudio.spatialBlend = 0f;
         if (movementAudio != null)
         {
             movementAudio.Stop();
@@ -95,6 +105,13 @@ public class PacStudentController : MonoBehaviour
             movementDust = Instantiate(movementDustPrefab, transform);
             movementDust.name = "MovementDust";
             movementDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            wallDust = Instantiate(movementDustPrefab, transform);
+            wallDust.name = "WallCollisionDust";
+            wallDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            ParticleSystem.MainModule main = wallDust.main;
+            main.loop = false;
+            ParticleSystem.EmissionModule emission = wallDust.emission;
+            emission.enabled = false;
         }
     }
 
@@ -116,6 +133,7 @@ public class PacStudentController : MonoBehaviour
             if (!isLerping && !TryBeginMove())
             {
                 StopMovementFeedback();
+                PlayWallFeedback();
                 return;
             }
 
@@ -131,11 +149,16 @@ public class PacStudentController : MonoBehaviour
                 transform.position = tweenEnd;
                 currentCell = targetCell;
                 isLerping = false;
+                CollectPellet();
+                TeleportAtTunnelEnd();
             }
         }
 
         if (!isLerping && !CanMove(lastInput) && !CanMove(currentInput))
+        {
             StopMovementFeedback();
+            PlayWallFeedback();
+        }
     }
 
     private bool TryBeginMove()
@@ -150,6 +173,8 @@ public class PacStudentController : MonoBehaviour
         }
 
         targetCell = currentCell + currentInput;
+        blockedDirection = Vector2Int.zero;
+        CollectPellet();
         tweenStart = CellToWorld(currentCell);
         tweenEnd = CellToWorld(targetCell);
         tweenElapsed = 0f;
@@ -162,6 +187,49 @@ public class PacStudentController : MonoBehaviour
     private bool CanMove(Vector2Int direction)
     {
         return direction != Vector2Int.zero && IsWalkable(currentCell + direction);
+    }
+
+    private void CollectPellet()
+    {
+        if (pellets == null) return;
+        foreach (SpriteRenderer pellet in pellets)
+        {
+            if (pellet == null || !pellet.enabled || !pellet.gameObject.activeInHierarchy ||
+                (pellet.transform.position - transform.position).sqrMagnitude >= 0.000001f) continue;
+            pellet.gameObject.SetActive(false);
+            Destroy(pellet.gameObject);
+            if (hud != null) hud.AddScore(10);
+        }
+    }
+
+    private void TeleportAtTunnelEnd()
+    {
+        int lastColumn = levelMap.GetLength(1) * 2 - 1;
+        if (currentCell.y != levelMap.GetLength(0) - 1) return;
+        if (currentCell.x == 0 && currentInput == Vector2Int.left)
+            currentCell.x = lastColumn;
+        else if (currentCell.x == lastColumn && currentInput == Vector2Int.right)
+            currentCell.x = 0;
+        else return;
+        transform.position = CellToWorld(currentCell);
+        TeleportVersion++;
+        if (movementDust != null) movementDust.Clear(true);
+    }
+
+    private void PlayWallFeedback()
+    {
+        Vector2Int direction = currentInput != Vector2Int.zero ? currentInput : lastInput;
+        if (direction == Vector2Int.zero || direction == blockedDirection) return;
+        blockedDirection = direction;
+        if (collisionAudio != null && wallCollisionClip != null)
+            collisionAudio.PlayOneShot(wallCollisionClip);
+        if (wallDust != null)
+        {
+            wallDust.transform.position = CellToWorld(currentCell) +
+                gridOrigin.TransformVector(new Vector3(direction.x, -direction.y, 0f) * cellSize * 0.5f);
+            wallDust.Play();
+            wallDust.Emit(8);
+        }
     }
 
     private void PlayMovementFeedback()
@@ -221,6 +289,8 @@ public class PacStudentController : MonoBehaviour
     private void OnDisable()
     {
         StopMovementFeedback();
+        if (collisionAudio != null) collisionAudio.Stop();
+        if (wallDust != null) wallDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
     }
 
     private bool IsWalkable(Vector2Int cell)

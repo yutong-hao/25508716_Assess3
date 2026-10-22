@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[DefaultExecutionOrder(100)]
 public class CherryController : MonoBehaviour
 {
     [SerializeField] private SpriteRenderer bonusPrefab;
@@ -7,6 +8,9 @@ public class CherryController : MonoBehaviour
     [SerializeField] private Camera gameCamera;
     [SerializeField] private Rect levelBounds = new Rect(-0.0625f, -3.5625f, 3.5f, 3.625f);
     [SerializeField, Min(0.01f)] private float moveSpeed = 0.625f;
+    [SerializeField] private PacStudentController player;
+    [SerializeField] private InGameHUDController hud;
+    [SerializeField] private AudioClip collectClip;
 
     private const float SpawnDelay = 5f;
     private const int BonusSortingOrder = 100;
@@ -20,6 +24,10 @@ public class CherryController : MonoBehaviour
     private float movementDuration;
     private float previousPerimeterPosition = -1f;
     private bool hadActiveBonus;
+    private AudioSource collectAudio;
+    private Vector3 previousPlayerPosition;
+    private int previousTeleportVersion;
+    private Collider2D playerCollider;
 
     private void Start()
     {
@@ -32,11 +40,51 @@ public class CherryController : MonoBehaviour
         }
 
         CreateVisibilityMask();
+        collectAudio = gameObject.AddComponent<AudioSource>();
+        collectAudio.playOnAwake = false;
+        collectAudio.spatialBlend = 0f;
+        if (player != null) playerCollider = player.GetComponent<Collider2D>();
+        RememberPlayerPosition();
     }
 
     private void Update()
     {
+        SpriteRenderer previousBonus = activeBonus;
+        Vector3 previousBonusPosition = previousBonus != null ? previousBonus.transform.position : Vector3.zero;
         AdvanceBonus(Time.deltaTime);
+        if (activeBonus != null && player != null && player.isActiveAndEnabled)
+            CheckPlayerCollision(previousBonus == activeBonus ? previousBonusPosition : activeBonus.transform.position);
+        RememberPlayerPosition();
+    }
+
+    private void RememberPlayerPosition()
+    {
+        if (player == null) return;
+        previousPlayerPosition = player.transform.position;
+        previousTeleportVersion = player.TeleportVersion;
+    }
+
+    private void CheckPlayerCollision(Vector3 previousBonusPosition)
+    {
+        Vector3 playerPosition = player.transform.position;
+        if (!levelBounds.Contains(gridOrigin.InverseTransformPoint(playerPosition))) return;
+        Vector2 relativeEnd = activeBonus.transform.position - playerPosition;
+        Vector2 relativeStart = previousTeleportVersion == player.TeleportVersion
+            ? previousBonusPosition - previousPlayerPosition : relativeEnd;
+        Vector2 motion = relativeEnd - relativeStart;
+        float fraction = motion.sqrMagnitude > 0f
+            ? Mathf.Clamp01(-Vector2.Dot(relativeStart, motion) / motion.sqrMagnitude) : 0f;
+        float playerRadius = playerCollider != null
+            ? Mathf.Min(playerCollider.bounds.extents.x, playerCollider.bounds.extents.y) : 0f;
+        float radius = Mathf.Min(activeBonus.bounds.extents.x, activeBonus.bounds.extents.y) + playerRadius;
+        if ((relativeStart + motion * fraction).sqrMagnitude > radius * radius) return;
+        activeBonus.gameObject.SetActive(false);
+        Destroy(activeBonus.gameObject);
+        activeBonus = null;
+        hadActiveBonus = false;
+        spawnElapsed = 0f;
+        if (hud != null) hud.AddScore(100);
+        if (collectAudio != null && collectClip != null) collectAudio.PlayOneShot(collectClip);
     }
 
     private void AdvanceBonus(float deltaTime)
