@@ -12,6 +12,7 @@ public AudioSource dead;
 public AudioSource eatghost;
 public AudioSource ghostscared;
 public float introduration = 3f;
+private bool ghostsScared;
 
     void Start()
     {
@@ -27,9 +28,23 @@ public float introduration = 3f;
 
     intro.Stop();
 
-    ghostnormal.loop = true;
-    ghostnormal.Play();
+    if (!ghostsScared)
+    {
+        ghostnormal.loop = true;
+        ghostnormal.Play();
+    }
 }
+
+    public void SetGhostScaredMusic(bool scared)
+    {
+        ghostsScared = scared;
+        intro.Stop();
+        AudioSource next = scared ? ghostscared : ghostnormal;
+        AudioSource previous = scared ? ghostnormal : ghostscared;
+        previous.Stop();
+        next.loop = true;
+        if (!next.isPlaying) next.Play();
+    }
       
     public void Playeatpellet()
     {

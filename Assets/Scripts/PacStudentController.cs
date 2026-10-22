@@ -11,6 +11,8 @@ public class PacStudentController : MonoBehaviour
     [SerializeField] private ParticleSystem movementDustPrefab;
     [SerializeField] private InGameHUDController hud;
     [SerializeField] private AudioClip wallCollisionClip;
+    [SerializeField] private Transform powerPelletsRoot;
+    [SerializeField] private PowerPelletController powerPelletController;
 
     public int TeleportVersion { get; private set; }
 
@@ -47,6 +49,7 @@ public class PacStudentController : MonoBehaviour
     private AudioSource movementAudio;
     private ParticleSystem movementDust;
     private SpriteRenderer[] pellets;
+    private SpriteRenderer[] powerPellets;
     private string movementState = "right";
     private bool feedbackPlaying;
     private AudioSource collisionAudio;
@@ -99,6 +102,9 @@ public class PacStudentController : MonoBehaviour
 
         pellets = pelletsRoot != null
             ? pelletsRoot.GetComponentsInChildren<SpriteRenderer>(true)
+            : new SpriteRenderer[0];
+        powerPellets = powerPelletsRoot != null
+            ? powerPelletsRoot.GetComponentsInChildren<SpriteRenderer>(true)
             : new SpriteRenderer[0];
         if (movementDustPrefab != null)
         {
@@ -191,6 +197,7 @@ public class PacStudentController : MonoBehaviour
 
     private void CollectPellet()
     {
+        CollectPowerPellet();
         if (pellets == null) return;
         foreach (SpriteRenderer pellet in pellets)
         {
@@ -199,6 +206,20 @@ public class PacStudentController : MonoBehaviour
             pellet.gameObject.SetActive(false);
             Destroy(pellet.gameObject);
             if (hud != null) hud.AddScore(10);
+        }
+    }
+
+    private void CollectPowerPellet()
+    {
+        if (powerPellets == null || powerPelletController == null) return;
+        foreach (SpriteRenderer pellet in powerPellets)
+        {
+            if (pellet == null || !pellet.enabled || !pellet.gameObject.activeInHierarchy ||
+                (pellet.transform.position - transform.position).sqrMagnitude >= 0.000001f) continue;
+            pellet.gameObject.SetActive(false);
+            Destroy(pellet.gameObject);
+            if (hud != null) hud.AddScore(50);
+            powerPelletController.Activate();
         }
     }
 
