@@ -5,6 +5,10 @@ public class PacStudentController : MonoBehaviour
     [SerializeField] private Transform gridOrigin;
     [SerializeField, Min(0.001f)] private float cellSize = 0.125f;
     [SerializeField, Min(0.01f)] private float tilesPerSecond = 5f;
+    [SerializeField] private Transform pelletsRoot;
+    [SerializeField] private AudioClip movementClip;
+    [SerializeField] private AudioClip pelletMovementClip;
+    [SerializeField] private ParticleSystem movementDustPrefab;
 
     private readonly int[,] levelMap =
     {
@@ -35,6 +39,12 @@ public class PacStudentController : MonoBehaviour
     private float tweenDuration;
     private float gridDepth;
     private bool isLerping;
+    private Animator animator;
+    private AudioSource movementAudio;
+    private ParticleSystem movementDust;
+    private SpriteRenderer[] pellets;
+    private string movementState = "right";
+    private bool feedbackPlaying;
 
     private void Start()
     {
@@ -59,12 +69,32 @@ public class PacStudentController : MonoBehaviour
         }
 
         transform.position = CellToWorld(currentCell);
-        Animator animator = GetComponent<Animator>();
+        animator = GetComponent<Animator>();
         if (animator != null)
         {
+            animator.SetBool("RouteControlled", true);
             animator.Play("right", 0, 0f);
             animator.Update(0f);
             animator.speed = 0f;
+        }
+
+        movementAudio = GetComponent<AudioSource>();
+        if (movementAudio != null)
+        {
+            movementAudio.Stop();
+            movementAudio.playOnAwake = false;
+            movementAudio.loop = true;
+            movementAudio.spatialBlend = 0f;
+        }
+
+        pellets = pelletsRoot != null
+            ? pelletsRoot.GetComponentsInChildren<SpriteRenderer>(true)
+            : new SpriteRenderer[0];
+        if (movementDustPrefab != null)
+        {
+            movementDust = Instantiate(movementDustPrefab, transform);
+            movementDust.name = "MovementDust";
+            movementDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
     }
 
@@ -83,7 +113,13 @@ public class PacStudentController : MonoBehaviour
         float remainingTime = deltaTime;
         while (remainingTime > 0f)
         {
-            if (!isLerping && !TryBeginMove()) return;
+            if (!isLerping && !TryBeginMove())
+            {
+                StopMovementFeedback();
+                return;
+            }
+
+            if (!feedbackPlaying) PlayMovementFeedback();
 
             float stepTime = Mathf.Min(remainingTime, tweenDuration - tweenElapsed);
             tweenElapsed += stepTime;
@@ -97,15 +133,18 @@ public class PacStudentController : MonoBehaviour
                 isLerping = false;
             }
         }
+
+        if (!isLerping && !CanMove(lastInput) && !CanMove(currentInput))
+            StopMovementFeedback();
     }
 
     private bool TryBeginMove()
     {
-        if (lastInput != Vector2Int.zero && IsWalkable(currentCell + lastInput))
+        if (CanMove(lastInput))
         {
             currentInput = lastInput;
         }
-        else if (currentInput == Vector2Int.zero || !IsWalkable(currentCell + currentInput))
+        else if (!CanMove(currentInput))
         {
             return false;
         }
@@ -116,7 +155,72 @@ public class PacStudentController : MonoBehaviour
         tweenElapsed = 0f;
         tweenDuration = 1f / tilesPerSecond;
         isLerping = true;
+        PlayMovementFeedback();
         return true;
+    }
+
+    private bool CanMove(Vector2Int direction)
+    {
+        return direction != Vector2Int.zero && IsWalkable(currentCell + direction);
+    }
+
+    private void PlayMovementFeedback()
+    {
+        string nextState = currentInput.x != 0
+            ? (currentInput.x > 0 ? "right" : "left")
+            : (currentInput.y < 0 ? "back" : "player-walk");
+        if (animator != null)
+        {
+            if (!feedbackPlaying || movementState != nextState)
+                animator.Play(nextState, 0, 0f);
+            animator.speed = 1f;
+        }
+        movementState = nextState;
+
+        if (movementAudio != null)
+        {
+            AudioClip nextClip = HasPelletAt(tweenEnd) ? pelletMovementClip : movementClip;
+            if (movementAudio.clip != nextClip)
+            {
+                movementAudio.Stop();
+                movementAudio.clip = nextClip;
+            }
+            if (nextClip != null && !movementAudio.isPlaying) movementAudio.Play();
+        }
+
+        if (movementDust != null)
+        {
+            movementDust.transform.localPosition = new Vector3(
+                -currentInput.x * 0.3f, currentInput.y * 0.3f - 0.42f, 0f);
+            if (!movementDust.isPlaying) movementDust.Play();
+        }
+        feedbackPlaying = true;
+    }
+
+    private bool HasPelletAt(Vector3 position)
+    {
+        if (pellets == null) return false;
+        foreach (SpriteRenderer pellet in pellets)
+        {
+            if (pellet != null && pellet.enabled && pellet.gameObject.activeInHierarchy &&
+                (pellet.transform.position - position).sqrMagnitude < 0.000001f)
+                return true;
+        }
+        return false;
+    }
+
+    private void StopMovementFeedback()
+    {
+        if (animator != null) animator.speed = 0f;
+        if (movementAudio != null && movementAudio.isPlaying) movementAudio.Stop();
+        if (movementDust != null && (movementDust.isPlaying || movementDust.particleCount > 0))
+            movementDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        feedbackPlaying = false;
+    }
+
+    private void OnDisable()
+    {
+        StopMovementFeedback();
     }
 
     private bool IsWalkable(Vector2Int cell)
