@@ -1056,6 +1056,10 @@ MonoBehaviour:
   ghosts: {fileID: 3900000001}
   levelNumber: 2
   deliveryObjective: 1
+  victoryCat: {fileID: 25008397792839078, guid: 6b9a917c096d6444c931f03c055f4d4b, type: 3}
+  defeatedCat: {fileID: 5347916925817469616, guid: bf3d57269ef00471b8063ff75c0ef045, type: 3}
+  resultPopcorn: {fileID: 21300000, guid: a8a425aa3e2e7acaacb8030d83466284, type: 3}
+  resultPellet: {fileID: -7443247444544269807, guid: 45b619a1f993e43dfae8cd3753a8c1cf, type: 3}
 --- !u!114 &274794048
 MonoBehaviour:
   m_ObjectHideFlags: 0

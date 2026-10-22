@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using UnityEngine.EventSystems;
 
 public class StartSceneController : MonoBehaviour
 {
@@ -13,13 +14,33 @@ public class StartSceneController : MonoBehaviour
 
     private float borderDistance;
     private bool loadingLevel;
+    private Vector3 lastMousePosition;
 
     private void Start()
     {
+        lastMousePosition = Input.mousePosition;
         for (int index = 0; index < highScoreTexts.Length; index++)
             highScoreTexts[index].text = LevelRecords.LoadScore(index + 1).ToString();
         for (int index = 0; index < bestTimeTexts.Length; index++)
             bestTimeTexts[index].text = InGameHUDController.FormatTime(LevelRecords.LoadTime(index + 1));
+    }
+
+    private void Update()
+    {
+        EventSystem events = EventSystem.current;
+        if (events == null || loadingLevel) return;
+
+        if (Input.mousePosition != lastMousePosition)
+        {
+            events.SetSelectedGameObject(null);
+        }
+        else if (events.currentSelectedGameObject == null &&
+            (Input.GetAxisRaw("Horizontal") != 0f || Input.GetAxisRaw("Vertical") != 0f || Input.GetButtonDown("Submit")))
+        {
+            events.SetSelectedGameObject(events.firstSelectedGameObject);
+        }
+
+        lastMousePosition = Input.mousePosition;
     }
 
     void LateUpdate()
