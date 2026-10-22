@@ -19,10 +19,19 @@ public class StartSceneController : MonoBehaviour
     private void Start()
     {
         lastMousePosition = Input.mousePosition;
-        for (int index = 0; index < highScoreTexts.Length; index++)
-            highScoreTexts[index].text = LevelRecords.LoadScore(index + 1).ToString();
-        for (int index = 0; index < bestTimeTexts.Length; index++)
-            bestTimeTexts[index].text = InGameHUDController.FormatTime(LevelRecords.LoadTime(index + 1));
+        for (int i = 0; i < highScoreTexts.Length; i = i + 1)
+        {
+            highScoreTexts[i].text = LevelRecords.LoadScore(i + 1).ToString();
+        }
+
+        for (int i = 0; i < bestTimeTexts.Length; i = i + 1)
+        {
+            string timeText = InGameHUDController.FormatTime(
+                LevelRecords.LoadTime(i + 1)
+            );
+
+            bestTimeTexts[i].text = timeText;
+        }
     }
 
     private void Update()
@@ -43,47 +52,96 @@ public class StartSceneController : MonoBehaviour
         lastMousePosition = Input.mousePosition;
     }
 
-    void LateUpdate()
+    private void LateUpdate()
     {
-        if (borderBounds == null || borderSnacks == null || borderSnacks.Length == 0) return;
-
-        Rect bounds = borderBounds.rect;
-        float perimeter = 2f * (bounds.width + bounds.height);
-        if (bounds.width <= 0f || bounds.height <= 0f) return;
-
-        borderDistance = Mathf.Repeat(borderDistance + borderSpeed * Time.unscaledDeltaTime, perimeter);
-        for (int index = 0; index < borderSnacks.Length; index++)
+        if (borderBounds == null || borderSnacks == null)
         {
-            if (borderSnacks[index] == null) continue;
+            return;
+        }
 
-            float distance = Mathf.Repeat(borderDistance + perimeter * index / borderSnacks.Length, perimeter);
-            Vector2 position;
-            if (distance < bounds.width)
-                position = new Vector2(bounds.xMin + distance, bounds.yMax);
-            else if (distance < bounds.width + bounds.height)
-                position = new Vector2(bounds.xMax, bounds.yMax - (distance - bounds.width));
-            else if (distance < 2f * bounds.width + bounds.height)
-                position = new Vector2(bounds.xMax - (distance - bounds.width - bounds.height), bounds.yMin);
+        if (borderSnacks.Length == 0)
+        {
+            return;
+        }
+
+        float width = borderBounds.rect.width;
+        float height = borderBounds.rect.height;
+
+        if (width <= 0 || height <= 0)
+        {
+            return;
+        }
+
+        float perimeter = 2f * (width + height);
+
+        borderDistance = borderDistance + borderSpeed * Time.unscaledDeltaTime;
+        borderDistance = Mathf.Repeat(borderDistance, perimeter);
+
+        float spacing = perimeter / borderSnacks.Length;
+
+        for (int i = 0; i < borderSnacks.Length; i = i + 1)
+        {
+            if (borderSnacks[i] == null)
+            {
+                continue;
+            }
+
+            float distance = borderDistance + spacing * i;
+            distance = Mathf.Repeat(distance, perimeter);
+
+            Vector2 anchor;
+
+            if (distance < width)
+            {
+                float x = distance / width;
+                anchor = new Vector2(x, 1);
+            }
+            else if (distance < width + height)
+            {
+                float down = distance - width;
+                float y = 1 - down / height;
+
+                anchor = new Vector2(1, y);
+            }
+            else if (distance < width * 2 + height)
+            {
+                float left = distance - width - height;
+                float x = 1 - left / width;
+
+                anchor = new Vector2(x, 0);
+            }
             else
-                position = new Vector2(bounds.xMin, bounds.yMin + (distance - 2f * bounds.width - bounds.height));
+            {
+                float up = distance - width * 2 - height;
+                float y = up / height;
 
-            Vector2 anchor = new Vector2((position.x - bounds.xMin) / bounds.width, (position.y - bounds.yMin) / bounds.height);
-            borderSnacks[index].anchorMin = anchor;
-            borderSnacks[index].anchorMax = anchor;
-            borderSnacks[index].anchoredPosition = Vector2.zero;
+                anchor = new Vector2(0, y);
+            }
+
+            borderSnacks[i].anchorMin = anchor;
+            borderSnacks[i].anchorMax = anchor;
+            borderSnacks[i].anchoredPosition = new Vector2(0, 0);
         }
     }
 
     public void LoadLevelOne()
     {
-        if (loadingLevel) return;
+        if (loadingLevel)
+        {
+            return;
+        }
+
         loadingLevel = true;
         SceneManager.LoadScene(levelOneScene);
     }
 
     public void LoadLevelTwo()
     {
-        if (loadingLevel) return;
+        if (loadingLevel)
+        {
+            return;
+        }
+
         loadingLevel = true;
         SceneManager.LoadScene("InnovationScene");
     }

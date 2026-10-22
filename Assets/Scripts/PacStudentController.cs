@@ -17,13 +17,45 @@ public class PacStudentController : MonoBehaviour
 
     public int TeleportVersion { get; private set; }
     public bool IsDying { get; private set; }
-    public bool CanInteract => isActiveAndEnabled && !IsDying && (hud == null || (hud.RoundStarted && !hud.IsGameOver && hud.Lives > 0));
-    public float MovementSpeed => tilesPerSecond * Vector3.Distance(CellToWorld(Vector2Int.zero), CellToWorld(Vector2Int.right));
+
+    public bool CanInteract
+    {
+        get
+        {
+            if (!isActiveAndEnabled || IsDying)
+            {
+                return false;
+            }
+
+            if (hud == null)
+            {
+                return true;
+            }
+
+            return hud.RoundStarted && !hud.IsGameOver && hud.Lives > 0;
+        }
+    }
+
+    public float MovementSpeed
+    {
+        get
+        {
+            Vector3 start = CellToWorld(Vector2Int.zero);
+            Vector3 end = CellToWorld(Vector2Int.right);
+            float distance = Vector3.Distance(start, end);
+
+            return tilesPerSecond * distance;
+        }
+    }
 
     public Vector2Int WorldToCell(Vector3 position)
     {
         Vector3 local = gridOrigin.InverseTransformPoint(position);
-        return new Vector2Int(Mathf.RoundToInt(local.x / cellSize), Mathf.RoundToInt(-local.y / cellSize));
+
+        int x = Mathf.RoundToInt(local.x / cellSize);
+        int y = Mathf.RoundToInt(-local.y / cellSize);
+
+        return new Vector2Int(x, y);
     }
 
     private readonly int[,] levelMap =
@@ -74,16 +106,22 @@ public class PacStudentController : MonoBehaviour
     {
         if (gridOrigin == null || cellSize <= 0f || tilesPerSecond <= 0f)
         {
-            Debug.LogError("PacStudent needs a grid origin, positive cell size and positive movement speed.", this);
+            Debug.LogError(
+                "PacStudent needs a grid origin, positive cell size and positive movement speed.",
+                this
+            );
+
             enabled = false;
             return;
         }
 
         Vector3 localPosition = gridOrigin.InverseTransformPoint(transform.position);
         gridDepth = localPosition.z;
-        currentCell = new Vector2Int(
-            Mathf.RoundToInt(localPosition.x / cellSize),
-            Mathf.RoundToInt(-localPosition.y / cellSize));
+
+        int x = Mathf.RoundToInt(localPosition.x / cellSize);
+        int y = Mathf.RoundToInt(-localPosition.y / cellSize);
+
+        currentCell = new Vector2Int(x, y);
 
         if (!IsWalkable(currentCell))
         {
@@ -94,7 +132,9 @@ public class PacStudentController : MonoBehaviour
 
         transform.position = CellToWorld(currentCell);
         spawnCell = currentCell;
+
         animator = GetComponent<Animator>();
+
         if (animator != null)
         {
             animator.SetBool("RouteControlled", true);
@@ -104,9 +144,11 @@ public class PacStudentController : MonoBehaviour
         }
 
         movementAudio = GetComponent<AudioSource>();
+
         collisionAudio = gameObject.AddComponent<AudioSource>();
         collisionAudio.playOnAwake = false;
         collisionAudio.spatialBlend = 0f;
+
         if (movementAudio != null)
         {
             movementAudio.Stop();
@@ -115,32 +157,70 @@ public class PacStudentController : MonoBehaviour
             movementAudio.spatialBlend = 0f;
         }
 
-        pellets = pelletsRoot != null
-            ? pelletsRoot.GetComponentsInChildren<SpriteRenderer>(true)
-            : new SpriteRenderer[0];
-        powerPellets = powerPelletsRoot != null
-            ? powerPelletsRoot.GetComponentsInChildren<SpriteRenderer>(true)
-            : new SpriteRenderer[0];
+        if (pelletsRoot != null)
+        {
+            pellets = pelletsRoot.GetComponentsInChildren<SpriteRenderer>(true);
+        }
+        else
+        {
+            pellets = new SpriteRenderer[0];
+        }
+
+        if (powerPelletsRoot != null)
+        {
+            powerPellets = powerPelletsRoot.GetComponentsInChildren<SpriteRenderer>(true);
+        }
+        else
+        {
+            powerPellets = new SpriteRenderer[0];
+        }
+
         if (hud != null)
-            hud.RegisterPellets(System.Array.FindAll(pellets, pellet => pellet.enabled && pellet.gameObject.activeInHierarchy).Length +
-                System.Array.FindAll(powerPellets, pellet => pellet.enabled && pellet.gameObject.activeInHierarchy).Length);
+        {
+            int pelletCount = 0;
+
+            for (int i = 0; i < pellets.Length; i = i + 1)
+            {
+                if (pellets[i].enabled && pellets[i].gameObject.activeInHierarchy)
+                {
+                    pelletCount = pelletCount + 1;
+                }
+            }
+
+            for (int i = 0; i < powerPellets.Length; i = i + 1)
+            {
+                if (powerPellets[i].enabled && powerPellets[i].gameObject.activeInHierarchy)
+                {
+                    pelletCount = pelletCount + 1;
+                }
+            }
+
+            hud.RegisterPellets(pelletCount);
+        }
+
         if (movementDustPrefab != null)
         {
             movementDust = Instantiate(movementDustPrefab, transform);
             movementDust.name = "MovementDust";
             movementDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
             wallDust = Instantiate(movementDustPrefab, transform);
             wallDust.name = "WallCollisionDust";
             wallDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
             ParticleSystem.MainModule main = wallDust.main;
             main.loop = false;
+
             ParticleSystem.EmissionModule emission = wallDust.emission;
             emission.enabled = false;
+
             deathDust = Instantiate(movementDustPrefab, transform);
             deathDust.name = "PlayerDeathParticles";
             deathDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
             ParticleSystem.MainModule deathMain = deathDust.main;
             deathMain.loop = false;
+
             ParticleSystem.EmissionModule deathEmission = deathDust.emission;
             deathEmission.enabled = false;
         }
@@ -153,20 +233,57 @@ public class PacStudentController : MonoBehaviour
             AdvanceDeath(Time.deltaTime);
             return;
         }
-        if (!CanInteract) return;
-        if (Input.GetKeyDown(KeyCode.W)) lastInput = Vector2Int.down;
-        if (Input.GetKeyDown(KeyCode.A)) lastInput = Vector2Int.left;
-        if (Input.GetKeyDown(KeyCode.S)) lastInput = Vector2Int.up;
-        if (Input.GetKeyDown(KeyCode.D)) lastInput = Vector2Int.right;
+
+        if (!CanInteract)
+        {
+            return;
+        }
+
+        if (Input.GetKeyDown(KeyCode.W))
+        {
+            lastInput = Vector2Int.down;
+        }
+
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            lastInput = Vector2Int.left;
+        }
+
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            lastInput = Vector2Int.up;
+        }
+
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            lastInput = Vector2Int.right;
+        }
 
         AdvanceMovement(Time.deltaTime);
     }
 
     private void AdvanceMovement(float deltaTime)
     {
-        if (!CanInteract) return;
-        if (powerPelletController != null && !powerPelletController.CheckPlayerContact(transform.position, transform.position)) return;
+        if (!CanInteract)
+        {
+            return;
+        }
+
+        if (powerPelletController != null)
+        {
+            bool canContinue = powerPelletController.CheckPlayerContact(
+                transform.position,
+                transform.position
+            );
+
+            if (!canContinue)
+            {
+                return;
+            }
+        }
+
         float remainingTime = deltaTime;
+
         while (remainingTime > 0f)
         {
             if (!isLerping && !TryBeginMove())
@@ -176,23 +293,53 @@ public class PacStudentController : MonoBehaviour
                 return;
             }
 
-            if (!feedbackPlaying) PlayMovementFeedback();
+            if (!feedbackPlaying)
+            {
+                PlayMovementFeedback();
+            }
 
-            float stepTime = Mathf.Min(remainingTime, tweenDuration - tweenElapsed);
-            tweenElapsed += stepTime;
-            remainingTime -= stepTime;
+            float stepTime = Mathf.Min(
+                remainingTime,
+                tweenDuration - tweenElapsed
+            );
+
+            tweenElapsed = tweenElapsed + stepTime;
+            remainingTime = remainingTime - stepTime;
+
             Vector3 previousPosition = transform.position;
-            transform.position = Vector3.Lerp(tweenStart, tweenEnd, tweenElapsed / tweenDuration);
+
+            transform.position = Vector3.Lerp(
+                tweenStart,
+                tweenEnd,
+                tweenElapsed / tweenDuration
+            );
 
             if (tweenElapsed >= tweenDuration)
             {
                 transform.position = tweenEnd;
                 currentCell = targetCell;
                 isLerping = false;
+
                 CollectPellet();
             }
-            if (powerPelletController != null && !powerPelletController.CheckPlayerContact(previousPosition, transform.position)) return;
-            if (!isLerping) TeleportAtTunnelEnd();
+
+            if (powerPelletController != null)
+            {
+                bool canContinue = powerPelletController.CheckPlayerContact(
+                    previousPosition,
+                    transform.position
+                );
+
+                if (!canContinue)
+                {
+                    return;
+                }
+            }
+
+            if (!isLerping)
+            {
+                TeleportAtTunnelEnd();
+            }
         }
 
         if (!isLerping && !CanMove(lastInput) && !CanMove(currentInput))
@@ -215,43 +362,76 @@ public class PacStudentController : MonoBehaviour
 
         targetCell = currentCell + currentInput;
         blockedDirection = Vector2Int.zero;
+
         CollectPellet();
-        if (!CanInteract) return false;
+
+        if (!CanInteract)
+        {
+            return false;
+        }
+
         tweenStart = CellToWorld(currentCell);
         tweenEnd = CellToWorld(targetCell);
         tweenElapsed = 0f;
         tweenDuration = 1f / tilesPerSecond;
         isLerping = true;
+
         PlayMovementFeedback();
+
         return true;
     }
 
     public void BeginDeath()
     {
-        if (!CanInteract) return;
+        if (!CanInteract)
+        {
+            return;
+        }
+
         IsDying = true;
+
         hud.LoseLife();
         StopMovementFeedback();
         collisionAudio.Stop();
-        if (wallDust != null) wallDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+        if (wallDust != null)
+        {
+            wallDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+
         isLerping = false;
         lastInput = Vector2Int.zero;
         currentInput = Vector2Int.zero;
         blockedDirection = Vector2Int.zero;
+
         powerPelletController.SuspendForPlayerDeath();
+
         animator.speed = 1f;
         animator.Play("dead", 0, 0f);
         animator.Update(0f);
+
         float animationDuration = animator.GetCurrentAnimatorStateInfo(0).length;
-        deathDuration = Mathf.Max(animationDuration, audioManager.dead.clip.length);
+
+        deathDuration = Mathf.Max(
+            animationDuration,
+            audioManager.dead.clip.length
+        );
+
         animator.speed = animationDuration / deathDuration;
         deathElapsed = 0f;
+
         audioManager.BeginPlayerDeath();
+
         if (deathDust != null)
         {
             deathDust.transform.localPosition = Vector3.zero;
+
             ParticleSystem.MainModule main = deathDust.main;
-            main.startLifetime = new ParticleSystem.MinMaxCurve(0.35f, deathDuration * 0.8f);
+            main.startLifetime = new ParticleSystem.MinMaxCurve(
+                0.35f,
+                deathDuration * 0.8f
+            );
+
             deathDust.Play();
             deathDust.Emit(18);
         }
@@ -259,42 +439,87 @@ public class PacStudentController : MonoBehaviour
 
     private void AdvanceDeath(float deltaTime)
     {
-        deathElapsed += deltaTime;
-        if (deathElapsed < deathDuration) return;
+        deathElapsed = deathElapsed + deltaTime;
+
+        if (deathElapsed < deathDuration)
+        {
+            return;
+        }
+
         animator.speed = 0f;
         IsDying = false;
-        if (hud.Lives == 0 || hud.IsGameOver) return;
+
+        if (hud.Lives == 0 || hud.IsGameOver)
+        {
+            return;
+        }
+
         currentCell = spawnCell;
         targetCell = spawnCell;
         transform.position = CellToWorld(spawnCell);
-        TeleportVersion++;
+
+        TeleportVersion = TeleportVersion + 1;
+
         tweenElapsed = 0f;
         lastInput = Vector2Int.zero;
         currentInput = Vector2Int.zero;
         movementState = "right";
+
         animator.Play("right", 0, 0f);
         animator.Update(0f);
-        if (deathDust != null) deathDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+        if (deathDust != null)
+        {
+            deathDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+
         powerPelletController.ResetAfterPlayerDeath();
         audioManager.EndPlayerDeath();
     }
 
     private bool CanMove(Vector2Int direction)
     {
-        return direction != Vector2Int.zero && IsWalkable(currentCell + direction);
+        if (direction == Vector2Int.zero)
+        {
+            return false;
+        }
+
+        return IsWalkable(currentCell + direction);
     }
 
     private void CollectPellet()
     {
-        if (!CanInteract) return;
-        CollectPowerPellet();
-        if (pellets == null) return;
-        foreach (SpriteRenderer pellet in pellets)
+        if (!CanInteract)
         {
-            if (pellet == null || !pellet.enabled || !pellet.gameObject.activeInHierarchy ||
-                (pellet.transform.position - transform.position).sqrMagnitude >= 0.000001f) continue;
+            return;
+        }
+
+        CollectPowerPellet();
+
+        if (pellets == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < pellets.Length; i = i + 1)
+        {
+            SpriteRenderer pellet = pellets[i];
+
+            if (pellet == null || !pellet.enabled || !pellet.gameObject.activeInHierarchy)
+            {
+                continue;
+            }
+
+            Vector3 difference = pellet.transform.position - transform.position;
+
+            if (difference.sqrMagnitude >= 0.000001f)
+            {
+                continue;
+            }
+
             pellet.gameObject.SetActive(false);
             Destroy(pellet.gameObject);
+
             if (hud != null)
             {
                 hud.AddScore(10);
@@ -305,19 +530,41 @@ public class PacStudentController : MonoBehaviour
 
     private void CollectPowerPellet()
     {
-        if (!CanInteract) return;
-        if (powerPellets == null || powerPelletController == null) return;
-        foreach (SpriteRenderer pellet in powerPellets)
+        if (!CanInteract)
         {
-            if (pellet == null || !pellet.enabled || !pellet.gameObject.activeInHierarchy ||
-                (pellet.transform.position - transform.position).sqrMagnitude >= 0.000001f) continue;
+            return;
+        }
+
+        if (powerPellets == null || powerPelletController == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < powerPellets.Length; i = i + 1)
+        {
+            SpriteRenderer pellet = powerPellets[i];
+
+            if (pellet == null || !pellet.enabled || !pellet.gameObject.activeInHierarchy)
+            {
+                continue;
+            }
+
+            Vector3 difference = pellet.transform.position - transform.position;
+
+            if (difference.sqrMagnitude >= 0.000001f)
+            {
+                continue;
+            }
+
             pellet.gameObject.SetActive(false);
             Destroy(pellet.gameObject);
+
             if (hud != null)
             {
                 hud.AddScore(50);
                 hud.PelletCollected();
             }
+
             powerPelletController.Activate();
         }
     }
@@ -325,28 +572,67 @@ public class PacStudentController : MonoBehaviour
     private void TeleportAtTunnelEnd()
     {
         int lastColumn = levelMap.GetLength(1) * 2 - 1;
-        if (currentCell.y != levelMap.GetLength(0) - 1) return;
+
+        if (currentCell.y != levelMap.GetLength(0) - 1)
+        {
+            return;
+        }
+
         if (currentCell.x == 0 && currentInput == Vector2Int.left)
+        {
             currentCell.x = lastColumn;
+        }
         else if (currentCell.x == lastColumn && currentInput == Vector2Int.right)
+        {
             currentCell.x = 0;
-        else return;
+        }
+        else
+        {
+            return;
+        }
+
         transform.position = CellToWorld(currentCell);
-        TeleportVersion++;
-        if (movementDust != null) movementDust.Clear(true);
+        TeleportVersion = TeleportVersion + 1;
+
+        if (movementDust != null)
+        {
+            movementDust.Clear(true);
+        }
     }
 
     private void PlayWallFeedback()
     {
-        Vector2Int direction = currentInput != Vector2Int.zero ? currentInput : lastInput;
-        if (direction == Vector2Int.zero || direction == blockedDirection) return;
+        Vector2Int direction;
+
+        if (currentInput != Vector2Int.zero)
+        {
+            direction = currentInput;
+        }
+        else
+        {
+            direction = lastInput;
+        }
+
+        if (direction == Vector2Int.zero || direction == blockedDirection)
+        {
+            return;
+        }
+
         blockedDirection = direction;
+
         if (collisionAudio != null && wallCollisionClip != null)
+        {
             collisionAudio.PlayOneShot(wallCollisionClip);
+        }
+
         if (wallDust != null)
         {
-            wallDust.transform.position = CellToWorld(currentCell) +
-                gridOrigin.TransformVector(new Vector3(direction.x, -direction.y, 0f) * cellSize * 0.5f);
+            Vector3 offset = new Vector3(direction.x, -direction.y, 0f);
+            offset = offset * cellSize * 0.5f;
+
+            wallDust.transform.position =
+                CellToWorld(currentCell) + gridOrigin.TransformVector(offset);
+
             wallDust.Play();
             wallDust.Emit(8);
         }
@@ -354,55 +640,132 @@ public class PacStudentController : MonoBehaviour
 
     private void PlayMovementFeedback()
     {
-        string nextState = currentInput.x != 0
-            ? (currentInput.x > 0 ? "right" : "left")
-            : (currentInput.y < 0 ? "back" : "player-walk");
+        string nextState;
+
+        if (currentInput.x != 0)
+        {
+            if (currentInput.x > 0)
+            {
+                nextState = "right";
+            }
+            else
+            {
+                nextState = "left";
+            }
+        }
+        else
+        {
+            if (currentInput.y < 0)
+            {
+                nextState = "back";
+            }
+            else
+            {
+                nextState = "player-walk";
+            }
+        }
+
         if (animator != null)
         {
             if (!feedbackPlaying || movementState != nextState)
+            {
                 animator.Play(nextState, 0, 0f);
+            }
+
             animator.speed = 1f;
         }
+
         movementState = nextState;
 
         if (movementAudio != null)
         {
-            AudioClip nextClip = HasPelletAt(tweenEnd) ? pelletMovementClip : movementClip;
+            AudioClip nextClip;
+
+            if (HasPelletAt(tweenEnd))
+            {
+                nextClip = pelletMovementClip;
+            }
+            else
+            {
+                nextClip = movementClip;
+            }
+
             if (movementAudio.clip != nextClip)
             {
                 movementAudio.Stop();
                 movementAudio.clip = nextClip;
             }
-            if (nextClip != null && !movementAudio.isPlaying) movementAudio.Play();
+
+            if (nextClip != null && !movementAudio.isPlaying)
+            {
+                movementAudio.Play();
+            }
         }
 
         if (movementDust != null)
         {
-            movementDust.transform.localPosition = new Vector3(
-                -currentInput.x * 0.3f, currentInput.y * 0.3f - 0.42f, 0f);
-            if (!movementDust.isPlaying) movementDust.Play();
+            float x = -currentInput.x * 0.3f;
+            float y = currentInput.y * 0.3f - 0.42f;
+
+            movementDust.transform.localPosition = new Vector3(x, y, 0f);
+
+            if (!movementDust.isPlaying)
+            {
+                movementDust.Play();
+            }
         }
+
         feedbackPlaying = true;
     }
 
     private bool HasPelletAt(Vector3 position)
     {
-        if (pellets == null) return false;
-        foreach (SpriteRenderer pellet in pellets)
+        if (pellets == null)
         {
-            if (pellet != null && pellet.enabled && pellet.gameObject.activeInHierarchy &&
-                (pellet.transform.position - position).sqrMagnitude < 0.000001f)
-                return true;
+            return false;
         }
+
+        for (int i = 0; i < pellets.Length; i = i + 1)
+        {
+            SpriteRenderer pellet = pellets[i];
+
+            if (pellet != null && pellet.enabled && pellet.gameObject.activeInHierarchy)
+            {
+                Vector3 difference = pellet.transform.position - position;
+
+                if (difference.sqrMagnitude < 0.000001f)
+                {
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 
     private void StopMovementFeedback()
     {
-        if (animator != null) animator.speed = 0f;
-        if (movementAudio != null && movementAudio.isPlaying) movementAudio.Stop();
-        if (movementDust != null && (movementDust.isPlaying || movementDust.particleCount > 0))
-            movementDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        if (animator != null)
+        {
+            animator.speed = 0f;
+        }
+
+        if (movementAudio != null && movementAudio.isPlaying)
+        {
+            movementAudio.Stop();
+        }
+
+        if (movementDust != null)
+        {
+            if (movementDust.isPlaying || movementDust.particleCount > 0)
+            {
+                movementDust.Stop(
+                    true,
+                    ParticleSystemStopBehavior.StopEmittingAndClear
+                );
+            }
+        }
+
         feedbackPlaying = false;
     }
 
@@ -411,32 +774,64 @@ public class PacStudentController : MonoBehaviour
         isLerping = false;
         lastInput = Vector2Int.zero;
         currentInput = Vector2Int.zero;
+
         StopMovementFeedback();
-        if (collisionAudio != null) collisionAudio.Stop();
-        if (wallDust != null) wallDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+        if (collisionAudio != null)
+        {
+            collisionAudio.Stop();
+        }
+
+        if (wallDust != null)
+        {
+            wallDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
     }
 
     private void OnDisable()
     {
         StopMovementFeedback();
-        if (collisionAudio != null) collisionAudio.Stop();
-        if (wallDust != null) wallDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+        if (collisionAudio != null)
+        {
+            collisionAudio.Stop();
+        }
+
+        if (wallDust != null)
+        {
+            wallDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
     }
 
     public bool IsWalkable(Vector2Int cell)
     {
         int width = levelMap.GetLength(1) * 2;
         int height = levelMap.GetLength(0) * 2 - 1;
-        if (cell.x < 0 || cell.x >= width || cell.y < 0 || cell.y >= height) return false;
+
+        if (cell.x < 0 || cell.x >= width || cell.y < 0 || cell.y >= height)
+        {
+            return false;
+        }
 
         int column = Mathf.Min(cell.x, width - 1 - cell.x);
         int row = Mathf.Min(cell.y, height - 1 - cell.y);
         int tile = levelMap[row, column];
-        return tile == 0 || tile == 5 || tile == 6;
+
+        if (tile == 0 || tile == 5 || tile == 6)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     public Vector3 CellToWorld(Vector2Int cell)
     {
-        return gridOrigin.TransformPoint(new Vector3(cell.x * cellSize, -cell.y * cellSize, gridDepth));
+        float x = cell.x * cellSize;
+        float y = -cell.y * cellSize;
+
+        Vector3 localPosition = new Vector3(x, y, gridDepth);
+
+        return gridOrigin.TransformPoint(localPosition);
     }
 }

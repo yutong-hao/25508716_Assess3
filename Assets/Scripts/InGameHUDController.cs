@@ -29,6 +29,7 @@ public class InGameHUDController : MonoBehaviour
     public double ElapsedTime { get; private set; }
     public bool IsGameOver { get; private set; }
     public int RemainingPellets { get; private set; }
+
     private double countdownElapsed;
     private float gameOverElapsed;
 
@@ -36,11 +37,14 @@ public class InGameHUDController : MonoBehaviour
     {
         Score = 0;
         Lives = 3;
+
         RefreshLives();
         RefreshScore();
         SetGhostTimer(0f);
+
         RoundStarted = false;
         ElapsedTime = 0d;
+
         gameTimerText.text = "00:00:00";
         controls.interactable = false;
         countdownText.text = "3";
@@ -61,41 +65,81 @@ public class InGameHUDController : MonoBehaviour
     {
         if (IsGameOver)
         {
-            gameOverElapsed += deltaTime;
-            if (gameOverElapsed >= 3f) SceneManager.LoadScene("StartScene");
+            gameOverElapsed = gameOverElapsed + deltaTime;
+
+            if (gameOverElapsed >= 3f)
+            {
+                SceneManager.LoadScene("StartScene");
+            }
+
             return;
         }
+
         if (!RoundStarted)
         {
-            countdownElapsed += deltaTime;
+            countdownElapsed = countdownElapsed + deltaTime;
+
             if (countdownElapsed < 4d)
             {
                 int step = (int)countdownElapsed;
-                countdownText.text = step < 3 ? (3 - step).ToString() : "GO!";
+
+                if (step < 3)
+                {
+                    countdownText.text = (3 - step).ToString();
+                }
+                else
+                {
+                    countdownText.text = "GO!";
+                }
+
                 return;
             }
+
             RoundStarted = true;
             countdownOverlay.SetActive(false);
             controls.interactable = true;
             audioManager.CompleteRoundCountdown();
+
             ElapsedTime = countdownElapsed - 4d;
         }
-        else if (Lives > 0) ElapsedTime += deltaTime;
+        else if (Lives > 0)
+        {
+            ElapsedTime = ElapsedTime + deltaTime;
+        }
+
         gameTimerText.text = FormatTime(ElapsedTime);
     }
 
     public static string FormatTime(double seconds)
     {
-        long hundredths = (long)System.Math.Floor(System.Math.Max(0d, seconds) * 100d);
-        return $"{hundredths / 6000:D2}:{hundredths / 100 % 60:D2}:{hundredths % 100:D2}";
+        double safeSeconds = System.Math.Max(0d, seconds);
+        long hundredths = (long)System.Math.Floor(safeSeconds * 100d);
+
+        long minutes = hundredths / 6000;
+        long remainingSeconds = hundredths / 100 % 60;
+        long remainingHundredths = hundredths % 100;
+
+        string minutesText = minutes.ToString("D2");
+        string secondsText = remainingSeconds.ToString("D2");
+        string hundredthsText = remainingHundredths.ToString("D2");
+
+        return minutesText + ":" + secondsText + ":" + hundredthsText;
     }
 
     public void LoseLife()
     {
-        if (IsGameOver) return;
+        if (IsGameOver)
+        {
+            return;
+        }
+        
         Lives = Mathf.Max(0, Lives - 1);
         RefreshLives();
-        if (Lives == 0) EndRound();
+
+        if (Lives == 0)
+        {
+            EndRound();
+        }
     }
 
     public void RegisterPellets(int count)
@@ -105,26 +149,44 @@ public class InGameHUDController : MonoBehaviour
 
     public void PelletCollected()
     {
-        if (IsGameOver || !RoundStarted || RemainingPellets <= 0) return;
-        RemainingPellets--;
-        if (RemainingPellets == 0 && !deliveryObjective) EndRound("Game Over");
+        if (IsGameOver || !RoundStarted || RemainingPellets <= 0)
+        {
+            return;
+        }
+
+        RemainingPellets = RemainingPellets - 1;
+
+        if (RemainingPellets == 0 && !deliveryObjective)
+        {
+            EndRound("Game Over");
+        }
     }
 
     public void CompleteDelivery()
     {
-        if (deliveryObjective) EndRound("Delivery Complete!");
+        if (deliveryObjective)
+        {
+            EndRound("Delivery Complete!");
+        }
     }
 
     private void EndRound(string message = "Game Over")
     {
-        if (IsGameOver || !RoundStarted) return;
+        if (IsGameOver || !RoundStarted)
+        {
+            return;
+        }
+
         IsGameOver = true;
         gameOverElapsed = 0f;
         controls.interactable = false;
+
         countdownText.text = message;
         countdownOverlay.SetActive(true);
+
         player.StopForGameOver();
         ghosts.SuspendForPlayerDeath();
+
         bool newHighScore = Score > LevelRecords.LoadScore(levelNumber);
         LevelRecords.SaveIfBetter(levelNumber, Score, ElapsedTime);
 
@@ -236,32 +298,76 @@ public class InGameHUDController : MonoBehaviour
 
     private void RefreshLives()
     {
-        if (lifeIndicators == null) return;
-        for (int index = 0; index < lifeIndicators.Length; index++)
-            if (lifeIndicators[index] != null) lifeIndicators[index].SetActive(index < Lives);
+        if (lifeIndicators == null)
+        {
+            return;
+        }
+
+        for (int i = 0; i < lifeIndicators.Length; i = i + 1)
+        {
+            if (lifeIndicators[i] != null)
+            {
+                if (i < Lives)
+                {
+                    lifeIndicators[i].SetActive(true);
+                }
+                else
+                {
+                    lifeIndicators[i].SetActive(false);
+                }
+            }
+        }
     }
 
     public void SetGhostTimer(float seconds)
     {
-        if (ghostTimerPanel != null) ghostTimerPanel.SetActive(seconds > 0f);
-        if (ghostTimerText != null) ghostTimerText.text = Mathf.CeilToInt(Mathf.Max(0f, seconds)).ToString();
+        if (ghostTimerPanel != null)
+        {
+            if (seconds > 0f)
+            {
+                ghostTimerPanel.SetActive(true);
+            }
+            else
+            {
+                ghostTimerPanel.SetActive(false);
+            }
+        }
+
+        if (ghostTimerText != null)
+        {
+            float safeSeconds = Mathf.Max(0f, seconds);
+            int displaySeconds = Mathf.CeilToInt(safeSeconds);
+
+            ghostTimerText.text = displaySeconds.ToString();
+        }
     }
 
     public void AddScore(int points)
     {
-        if (points <= 0 || IsGameOver) return;
-        Score += points;
+        if (points <= 0 || IsGameOver)
+        {
+            return;
+        }
+
+        Score = Score + points;
         RefreshScore();
     }
 
     private void RefreshScore()
     {
-        if (scoreText != null) scoreText.text = Score.ToString("D6");
+        if (scoreText != null)
+        {
+            scoreText.text = Score.ToString("D6");
+        }
     }
 
     public void ReturnToStartScene()
     {
-        if (!RoundStarted || IsGameOver) return;
+        if (!RoundStarted || IsGameOver)
+        {
+            return;
+        }
+
         SceneManager.LoadScene("StartScene");
     }
 }
