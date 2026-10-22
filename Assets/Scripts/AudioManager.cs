@@ -1,5 +1,4 @@
 using UnityEngine;
-using System.Collections;
 
 public class AudioManager : MonoBehaviour
 {
@@ -16,27 +15,25 @@ public float introduration = 3f;
 private bool ghostsScared;
 private bool ghostsDead;
 private bool playerDying;
+private bool roundStarting;
 
-    void Start()
+    public void BeginRoundCountdown()
     {
-        StartCoroutine(StartGameMusic());
+        roundStarting = true;
+        ghostnormal.Stop();
+        ghostscared.Stop();
+        if (ghostdead != null) ghostdead.Stop();
+        intro.loop = true;
+        intro.Play();
     }
 
-
-    IEnumerator StartGameMusic()
-{
-    intro.Play();
-
-    yield return new WaitForSeconds(introduration);
-
-    intro.Stop();
-
-    if (!ghostsScared && !ghostsDead && !playerDying)
+    public void CompleteRoundCountdown()
     {
-        ghostnormal.loop = true;
-        ghostnormal.Play();
+        roundStarting = false;
+        intro.Stop();
+        intro.loop = false;
+        RefreshGhostMusic();
     }
-}
 
     public void SetGhostScaredMusic(bool scared)
     {
@@ -52,7 +49,7 @@ private bool playerDying;
 
     private void RefreshGhostMusic()
     {
-        if (playerDying) return;
+        if (playerDying || roundStarting) return;
         intro.Stop();
         AudioSource next = ghostsDead ? ghostdead : ghostsScared ? ghostscared : ghostnormal;
         if (next != ghostnormal) ghostnormal.Stop();

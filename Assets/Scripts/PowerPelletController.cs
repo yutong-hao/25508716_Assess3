@@ -43,7 +43,7 @@ public class PowerPelletController : MonoBehaviour
 
     private void Update()
     {
-        if (playerDeathPaused) return;
+        if (playerDeathPaused || !hud.RoundStarted) return;
         AdvanceScaredTimer(Time.deltaTime);
         AdvanceDeadGhosts(Time.deltaTime);
     }
@@ -131,7 +131,7 @@ public class PowerPelletController : MonoBehaviour
 
     public void Activate()
     {
-        if (playerDeathPaused) return;
+        if (playerDeathPaused || !hud.RoundStarted) return;
         RemainingTime = 10f;
         recovering = false;
         SetLivingGhostState("Scared");

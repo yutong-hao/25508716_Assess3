@@ -8,9 +8,17 @@ public class InGameHUDController : MonoBehaviour
     [SerializeField] private GameObject ghostTimerPanel;
     [SerializeField] private TMP_Text ghostTimerText;
     [SerializeField] private GameObject[] lifeIndicators;
+    [SerializeField] private GameObject countdownOverlay;
+    [SerializeField] private TMP_Text countdownText;
+    [SerializeField] private TMP_Text gameTimerText;
+    [SerializeField] private CanvasGroup controls;
+    [SerializeField] private AudioManager audioManager;
 
     public int Score { get; private set; }
     public int Lives { get; private set; }
+    public bool RoundStarted { get; private set; }
+    public double ElapsedTime { get; private set; }
+    private double countdownElapsed;
 
     private void Awake()
     {
@@ -19,6 +27,49 @@ public class InGameHUDController : MonoBehaviour
         RefreshLives();
         RefreshScore();
         SetGhostTimer(0f);
+        RoundStarted = false;
+        ElapsedTime = 0d;
+        gameTimerText.text = "00:00:00";
+        controls.interactable = false;
+        countdownText.text = "3";
+        countdownOverlay.SetActive(true);
+    }
+
+    private void Start()
+    {
+        audioManager.BeginRoundCountdown();
+    }
+
+    private void Update()
+    {
+        AdvanceRound(Time.deltaTime);
+    }
+
+    private void AdvanceRound(float deltaTime)
+    {
+        if (!RoundStarted)
+        {
+            countdownElapsed += deltaTime;
+            if (countdownElapsed < 4d)
+            {
+                int step = (int)countdownElapsed;
+                countdownText.text = step < 3 ? (3 - step).ToString() : "GO!";
+                return;
+            }
+            RoundStarted = true;
+            countdownOverlay.SetActive(false);
+            controls.interactable = true;
+            audioManager.CompleteRoundCountdown();
+            ElapsedTime = countdownElapsed - 4d;
+        }
+        else if (Lives > 0) ElapsedTime += deltaTime;
+        gameTimerText.text = FormatTime(ElapsedTime);
+    }
+
+    public static string FormatTime(double seconds)
+    {
+        long hundredths = (long)System.Math.Floor(System.Math.Max(0d, seconds) * 100d);
+        return $"{hundredths / 6000:D2}:{hundredths / 100 % 60:D2}:{hundredths % 100:D2}";
     }
 
     public void LoseLife()
@@ -54,6 +105,7 @@ public class InGameHUDController : MonoBehaviour
 
     public void ReturnToStartScene()
     {
+        if (!RoundStarted) return;
         SceneManager.LoadScene("StartScene");
     }
 }

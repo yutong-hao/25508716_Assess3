@@ -17,7 +17,7 @@ public class PacStudentController : MonoBehaviour
 
     public int TeleportVersion { get; private set; }
     public bool IsDying { get; private set; }
-    public bool CanInteract => isActiveAndEnabled && !IsDying && (hud == null || hud.Lives > 0);
+    public bool CanInteract => isActiveAndEnabled && !IsDying && (hud == null || (hud.RoundStarted && hud.Lives > 0));
 
     private readonly int[,] levelMap =
     {
