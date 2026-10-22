@@ -35,7 +35,10 @@ public class StartSceneController : MonoBehaviour
             else
                 position = new Vector2(bounds.xMin, bounds.yMin + (distance - 2f * bounds.width - bounds.height));
 
-            borderSnacks[index].anchoredPosition = position;
+            Vector2 anchor = new Vector2((position.x - bounds.xMin) / bounds.width, (position.y - bounds.yMin) / bounds.height);
+            borderSnacks[index].anchorMin = anchor;
+            borderSnacks[index].anchorMax = anchor;
+            borderSnacks[index].anchoredPosition = Vector2.zero;
         }
     }
 
