@@ -18,6 +18,13 @@ public class PacStudentController : MonoBehaviour
     public int TeleportVersion { get; private set; }
     public bool IsDying { get; private set; }
     public bool CanInteract => isActiveAndEnabled && !IsDying && (hud == null || (hud.RoundStarted && !hud.IsGameOver && hud.Lives > 0));
+    public float MovementSpeed => tilesPerSecond * Vector3.Distance(CellToWorld(Vector2Int.zero), CellToWorld(Vector2Int.right));
+
+    public Vector2Int WorldToCell(Vector3 position)
+    {
+        Vector3 local = gridOrigin.InverseTransformPoint(position);
+        return new Vector2Int(Mathf.RoundToInt(local.x / cellSize), Mathf.RoundToInt(-local.y / cellSize));
+    }
 
     private readonly int[,] levelMap =
     {
@@ -416,7 +423,7 @@ public class PacStudentController : MonoBehaviour
         if (wallDust != null) wallDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
     }
 
-    private bool IsWalkable(Vector2Int cell)
+    public bool IsWalkable(Vector2Int cell)
     {
         int width = levelMap.GetLength(1) * 2;
         int height = levelMap.GetLength(0) * 2 - 1;
@@ -428,7 +435,7 @@ public class PacStudentController : MonoBehaviour
         return tile == 0 || tile == 5 || tile == 6;
     }
 
-    private Vector3 CellToWorld(Vector2Int cell)
+    public Vector3 CellToWorld(Vector2Int cell)
     {
         return gridOrigin.TransformPoint(new Vector3(cell.x * cellSize, -cell.y * cellSize, gridDepth));
     }
