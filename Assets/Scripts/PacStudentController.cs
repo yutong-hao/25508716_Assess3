@@ -13,8 +13,11 @@ public class PacStudentController : MonoBehaviour
     [SerializeField] private AudioClip wallCollisionClip;
     [SerializeField] private Transform powerPelletsRoot;
     [SerializeField] private PowerPelletController powerPelletController;
+    [SerializeField] private AudioManager audioManager;
 
     public int TeleportVersion { get; private set; }
+    public bool IsDying { get; private set; }
+    public bool CanInteract => isActiveAndEnabled && !IsDying && (hud == null || hud.Lives > 0);
 
     private readonly int[,] levelMap =
     {
@@ -55,6 +58,10 @@ public class PacStudentController : MonoBehaviour
     private AudioSource collisionAudio;
     private ParticleSystem wallDust;
     private Vector2Int blockedDirection;
+    private Vector2Int spawnCell;
+    private ParticleSystem deathDust;
+    private float deathElapsed;
+    private float deathDuration;
 
     private void Start()
     {
@@ -79,6 +86,7 @@ public class PacStudentController : MonoBehaviour
         }
 
         transform.position = CellToWorld(currentCell);
+        spawnCell = currentCell;
         animator = GetComponent<Animator>();
         if (animator != null)
         {
@@ -118,11 +126,24 @@ public class PacStudentController : MonoBehaviour
             main.loop = false;
             ParticleSystem.EmissionModule emission = wallDust.emission;
             emission.enabled = false;
+            deathDust = Instantiate(movementDustPrefab, transform);
+            deathDust.name = "PlayerDeathParticles";
+            deathDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            ParticleSystem.MainModule deathMain = deathDust.main;
+            deathMain.loop = false;
+            ParticleSystem.EmissionModule deathEmission = deathDust.emission;
+            deathEmission.enabled = false;
         }
     }
 
     private void Update()
     {
+        if (IsDying)
+        {
+            AdvanceDeath(Time.deltaTime);
+            return;
+        }
+        if (!CanInteract) return;
         if (Input.GetKeyDown(KeyCode.W)) lastInput = Vector2Int.down;
         if (Input.GetKeyDown(KeyCode.A)) lastInput = Vector2Int.left;
         if (Input.GetKeyDown(KeyCode.S)) lastInput = Vector2Int.up;
@@ -133,6 +154,8 @@ public class PacStudentController : MonoBehaviour
 
     private void AdvanceMovement(float deltaTime)
     {
+        if (!CanInteract) return;
+        if (powerPelletController != null && !powerPelletController.CheckPlayerContact(transform.position, transform.position)) return;
         float remainingTime = deltaTime;
         while (remainingTime > 0f)
         {
@@ -148,6 +171,7 @@ public class PacStudentController : MonoBehaviour
             float stepTime = Mathf.Min(remainingTime, tweenDuration - tweenElapsed);
             tweenElapsed += stepTime;
             remainingTime -= stepTime;
+            Vector3 previousPosition = transform.position;
             transform.position = Vector3.Lerp(tweenStart, tweenEnd, tweenElapsed / tweenDuration);
 
             if (tweenElapsed >= tweenDuration)
@@ -156,8 +180,9 @@ public class PacStudentController : MonoBehaviour
                 currentCell = targetCell;
                 isLerping = false;
                 CollectPellet();
-                TeleportAtTunnelEnd();
             }
+            if (powerPelletController != null && !powerPelletController.CheckPlayerContact(previousPosition, transform.position)) return;
+            if (!isLerping) TeleportAtTunnelEnd();
         }
 
         if (!isLerping && !CanMove(lastInput) && !CanMove(currentInput))
@@ -188,6 +213,59 @@ public class PacStudentController : MonoBehaviour
         isLerping = true;
         PlayMovementFeedback();
         return true;
+    }
+
+    public void BeginDeath()
+    {
+        if (!CanInteract) return;
+        IsDying = true;
+        hud.LoseLife();
+        StopMovementFeedback();
+        collisionAudio.Stop();
+        if (wallDust != null) wallDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        isLerping = false;
+        lastInput = Vector2Int.zero;
+        currentInput = Vector2Int.zero;
+        blockedDirection = Vector2Int.zero;
+        powerPelletController.SuspendForPlayerDeath();
+        animator.speed = 1f;
+        animator.Play("dead", 0, 0f);
+        animator.Update(0f);
+        float animationDuration = animator.GetCurrentAnimatorStateInfo(0).length;
+        deathDuration = Mathf.Max(animationDuration, audioManager.dead.clip.length);
+        animator.speed = animationDuration / deathDuration;
+        deathElapsed = 0f;
+        audioManager.BeginPlayerDeath();
+        if (deathDust != null)
+        {
+            deathDust.transform.localPosition = Vector3.zero;
+            ParticleSystem.MainModule main = deathDust.main;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.35f, deathDuration * 0.8f);
+            deathDust.Play();
+            deathDust.Emit(18);
+        }
+    }
+
+    private void AdvanceDeath(float deltaTime)
+    {
+        deathElapsed += deltaTime;
+        if (deathElapsed < deathDuration) return;
+        animator.speed = 0f;
+        IsDying = false;
+        if (hud.Lives == 0) return;
+        currentCell = spawnCell;
+        targetCell = spawnCell;
+        transform.position = CellToWorld(spawnCell);
+        TeleportVersion++;
+        tweenElapsed = 0f;
+        lastInput = Vector2Int.zero;
+        currentInput = Vector2Int.zero;
+        movementState = "right";
+        animator.Play("right", 0, 0f);
+        animator.Update(0f);
+        if (deathDust != null) deathDust.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        powerPelletController.ResetAfterPlayerDeath();
+        audioManager.EndPlayerDeath();
     }
 
     private bool CanMove(Vector2Int direction)

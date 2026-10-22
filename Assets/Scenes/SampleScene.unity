@@ -3984,6 +3984,7 @@ MonoBehaviour:
   eatghost: {fileID: 448239452}
   ghostscared: {fileID: 1558920863}
   introduration: 3
+  ghostdead: {fileID: 1807276846}
 --- !u!1 &3200000000
 GameObject:
   m_ObjectHideFlags: 0
@@ -64588,6 +64589,10 @@ MonoBehaviour:
   scoreText: {fileID: 113166953}
   ghostTimerPanel: {fileID: 1606253694}
   ghostTimerText: {fileID: 1842509353}
+  lifeIndicators:
+  - {fileID: 1939701162}
+  - {fileID: 50356831}
+  - {fileID: 288371776}
 --- !u!114 &274794048
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -67116,6 +67121,7 @@ MonoBehaviour:
   wallCollisionClip: {fileID: 8300000, guid: 2d7e81c61c52a47d99ed8c3f21d99fb1, type: 3}
   powerPelletsRoot: {fileID: 289759922}
   powerPelletController: {fileID: 3900000001}
+  audioManager: {fileID: 2132831594}
 --- !u!114 &3800000001
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -67164,6 +67170,7 @@ MonoBehaviour:
     controller: {fileID: 9100000, guid: fa0b6d97a790558c8b0e7d5fadbec9ab, type: 2}
   hud: {fileID: 274794047}
   audioManager: {fileID: 2132831594}
+  player: {fileID: 3700000001}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

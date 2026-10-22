@@ -52,7 +52,7 @@ public class CherryController : MonoBehaviour
         SpriteRenderer previousBonus = activeBonus;
         Vector3 previousBonusPosition = previousBonus != null ? previousBonus.transform.position : Vector3.zero;
         AdvanceBonus(Time.deltaTime);
-        if (activeBonus != null && player != null && player.isActiveAndEnabled)
+        if (activeBonus != null && player != null && player.CanInteract)
             CheckPlayerCollision(previousBonus == activeBonus ? previousBonusPosition : activeBonus.transform.position);
         RememberPlayerPosition();
     }

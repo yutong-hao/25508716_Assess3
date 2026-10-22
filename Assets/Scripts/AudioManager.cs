@@ -11,8 +11,11 @@ public AudioSource crush;
 public AudioSource dead;
 public AudioSource eatghost;
 public AudioSource ghostscared;
+public AudioSource ghostdead;
 public float introduration = 3f;
 private bool ghostsScared;
+private bool ghostsDead;
+private bool playerDying;
 
     void Start()
     {
@@ -28,7 +31,7 @@ private bool ghostsScared;
 
     intro.Stop();
 
-    if (!ghostsScared)
+    if (!ghostsScared && !ghostsDead && !playerDying)
     {
         ghostnormal.loop = true;
         ghostnormal.Play();
@@ -38,12 +41,44 @@ private bool ghostsScared;
     public void SetGhostScaredMusic(bool scared)
     {
         ghostsScared = scared;
+        RefreshGhostMusic();
+    }
+
+    public void SetGhostDeadMusic(bool hasDeadGhost)
+    {
+        ghostsDead = hasDeadGhost;
+        RefreshGhostMusic();
+    }
+
+    private void RefreshGhostMusic()
+    {
+        if (playerDying) return;
         intro.Stop();
-        AudioSource next = scared ? ghostscared : ghostnormal;
-        AudioSource previous = scared ? ghostnormal : ghostscared;
-        previous.Stop();
+        AudioSource next = ghostsDead ? ghostdead : ghostsScared ? ghostscared : ghostnormal;
+        if (next != ghostnormal) ghostnormal.Stop();
+        if (next != ghostscared) ghostscared.Stop();
+        if (next != ghostdead && ghostdead != null) ghostdead.Stop();
+        if (next == null) return;
         next.loop = true;
         if (!next.isPlaying) next.Play();
+    }
+
+    public void BeginPlayerDeath()
+    {
+        playerDying = true;
+        intro.Stop();
+        ghostnormal.Stop();
+        ghostscared.Stop();
+        if (ghostdead != null) ghostdead.Stop();
+        dead.loop = false;
+        dead.Play();
+    }
+
+    public void EndPlayerDeath()
+    {
+        playerDying = false;
+        dead.Stop();
+        RefreshGhostMusic();
     }
       
     public void Playeatpellet()
