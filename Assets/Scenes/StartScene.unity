@@ -1128,7 +1128,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 719536344}
-        m_TargetAssemblyTypeName: StartSceneController, Assembly-CSharp
+        m_TargetAssemblyTypeName: startc, Assembly-CSharp
         m_MethodName: LoadLevelOne
         m_Mode: 0
         m_Arguments:
@@ -2941,9 +2941,9 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23fb0c7d5fb754e799cc28031d3b4921, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::StartSceneController
-  borderBounds: {fileID: 1804235943}
-  borderSnacks:
+  m_EditorClassIdentifier: Assembly-CSharp::startc
+  bdBounds: {fileID: 1804235943}
+  bdSnacks:
   - {fileID: 303500162}
   - {fileID: 769599386}
   - {fileID: 969218611}
@@ -2992,12 +2992,12 @@ MonoBehaviour:
   - {fileID: 1865760496}
   - {fileID: 1919320457}
   - {fileID: 1327087200}
-  borderSpeed: 75
-  levelOneScene: SampleScene
-  highScoreTexts:
+  bdSpd: 75
+  lvlOneScene: SampleScene
+  hsTexts:
   - {fileID: 558282586}
   - {fileID: 580477968}
-  bestTimeTexts:
+  btTexts:
   - {fileID: 28142637}
   - {fileID: 1557084798}
 --- !u!4 &719536345
@@ -6166,7 +6166,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 719536344}
-        m_TargetAssemblyTypeName: StartSceneController, Assembly-CSharp
+        m_TargetAssemblyTypeName: startc, Assembly-CSharp
         m_MethodName: LoadLevelTwo
         m_Mode: 0
         m_Arguments:

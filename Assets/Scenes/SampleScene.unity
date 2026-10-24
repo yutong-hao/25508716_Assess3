@@ -3974,17 +3974,17 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2c84b63af4d7b4cb5b97187f6c52e72d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::AudioManager
+  m_EditorClassIdentifier: Assembly-CSharp::am
   intro: {fileID: 2084654406}
-  ghostnormal: {fileID: 2059429656}
-  eatpellet: {fileID: 1358918464}
+  ghNormal: {fileID: 2059429656}
+  eatPel: {fileID: 1358918464}
   bonus: {fileID: 92691545}
   crush: {fileID: 1305396820}
   dead: {fileID: 149441864}
-  eatghost: {fileID: 448239452}
-  ghostscared: {fileID: 1558920863}
-  introduration: 3
-  ghostdead: {fileID: 1807276846}
+  eatGh: {fileID: 448239452}
+  ghScared: {fileID: 1558920863}
+  introDur: 3
+  ghDead: {fileID: 1807276846}
 --- !u!1 &3200000000
 GameObject:
   m_ObjectHideFlags: 0
@@ -64586,26 +64586,26 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4665777058b0243ffa8f7d6d54cef3dc, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::InGameHUDController
-  scoreText: {fileID: 113166953}
-  ghostTimerPanel: {fileID: 1606253694}
-  ghostTimerText: {fileID: 1842509353}
-  lifeIndicators:
+  m_EditorClassIdentifier: Assembly-CSharp::hudc
+  scoreTxt: {fileID: 113166953}
+  ghPanel: {fileID: 1606253694}
+  ghTimerTxt: {fileID: 1842509353}
+  lifeIcons:
   - {fileID: 1939701162}
   - {fileID: 50356831}
   - {fileID: 288371776}
-  countdownOverlay: {fileID: 1906798272}
-  countdownText: {fileID: 327355186}
-  gameTimerText: {fileID: 294062545}
-  controls: {fileID: 274794052}
-  audioManager: {fileID: 2132831594}
-  player: {fileID: 3700000001}
-  ghosts: {fileID: 3900000001}
-  levelNumber: 1
+  cdOverlay: {fileID: 1906798272}
+  cdText: {fileID: 327355186}
+  timerTxt: {fileID: 294062545}
+  ctrls: {fileID: 274794052}
+  audMgr: {fileID: 2132831594}
+  pc: {fileID: 3700000001}
+  gh: {fileID: 3900000001}
+  lvlNum: 1
   victoryCat: {fileID: 25008397792839078, guid: 6b9a917c096d6444c931f03c055f4d4b, type: 3}
-  defeatedCat: {fileID: 5347916925817469616, guid: bf3d57269ef00471b8063ff75c0ef045, type: 3}
-  resultPopcorn: {fileID: 21300000, guid: a8a425aa3e2e7acaacb8030d83466284, type: 3}
-  resultPellet: {fileID: -7443247444544269807, guid: 45b619a1f993e43dfae8cd3753a8c1cf, type: 3}
+  loseCat: {fileID: 5347916925817469616, guid: bf3d57269ef00471b8063ff75c0ef045, type: 3}
+  resultCorn: {fileID: 21300000, guid: a8a425aa3e2e7acaacb8030d83466284, type: 3}
+  resultPel: {fileID: -7443247444544269807, guid: 45b619a1f993e43dfae8cd3753a8c1cf, type: 3}
 --- !u!114 &274794048
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -66183,7 +66183,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 274794047}
-        m_TargetAssemblyTypeName: InGameHUDController, Assembly-CSharp
+        m_TargetAssemblyTypeName: hudc, Assembly-CSharp
         m_MethodName: ReturnToStartScene
         m_Mode: 0
         m_Arguments:
@@ -67124,18 +67124,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5bb41bb4ce2b4adf8c37c7cb9d2ce0fe, type: 3}
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::PacStudentController
-  gridOrigin: {fileID: 186289667}
-  cellSize: 0.125
-  tilesPerSecond: 5
-  pelletsRoot: {fileID: 1945024094}
-  movementClip: {fileID: 8300000, guid: ff466e6e744aa4a9b9d2fa41cdb30c48, type: 3}
-  pelletMovementClip: {fileID: 8300000, guid: b6cdb6ba70a1d42bea39530ff969c60d, type: 3}
-  movementDustPrefab: {fileID: 4844228779600440320, guid: 26ee0829ae8674572adf6f9290943f87, type: 3}
+  gridOrg: {fileID: 186289667}
+  cellSz: 0.125
+  tileSpd: 5
+  pelRoot: {fileID: 1945024094}
+  moveSfx: {fileID: 8300000, guid: ff466e6e744aa4a9b9d2fa41cdb30c48, type: 3}
+  pelMoveSfx: {fileID: 8300000, guid: b6cdb6ba70a1d42bea39530ff969c60d, type: 3}
+  moveFxPrefab: {fileID: 4844228779600440320, guid: 26ee0829ae8674572adf6f9290943f87, type: 3}
   hud: {fileID: 274794047}
-  wallCollisionClip: {fileID: 8300000, guid: 2d7e81c61c52a47d99ed8c3f21d99fb1, type: 3}
-  powerPelletsRoot: {fileID: 289759922}
-  powerPelletController: {fileID: 3900000001}
-  audioManager: {fileID: 2132831594}
+  wallSfx: {fileID: 8300000, guid: 2d7e81c61c52a47d99ed8c3f21d99fb1, type: 3}
+  ppRoot: {fileID: 289759922}
+  ppc: {fileID: 3900000001}
+  audMgr: {fileID: 2132831594}
 --- !u!114 &3800000001
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -67148,19 +67148,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f7ed73c7e4874b45a491c1c4a4e48852, type: 3}
   m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::CherryController
-  bonusPrefab: {fileID: 8277197343150794196, guid: 9ac5fd5d5abf64e31b84af51d66eb227, type: 3}
-  gridOrigin: {fileID: 186289667}
-  gameCamera: {fileID: 519420031}
-  levelBounds:
+  bnPrefab: {fileID: 8277197343150794196, guid: 9ac5fd5d5abf64e31b84af51d66eb227, type: 3}
+  gridOrg: {fileID: 186289667}
+  cam: {fileID: 519420031}
+  lvlBounds:
     serializedVersion: 2
     x: -0.0625
     y: -3.5625
     width: 3.5
     height: 3.625
-  moveSpeed: 0.625
-  player: {fileID: 3700000001}
+  moveSpd: 0.625
+  pc: {fileID: 3700000001}
   hud: {fileID: 274794047}
-  collectClip: {fileID: 8300000, guid: 35d63348d50934e9cac0ae00d4637426, type: 3}
+  collectSfx: {fileID: 8300000, guid: 35d63348d50934e9cac0ae00d4637426, type: 3}
 --- !u!114 &3900000001
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -67172,8 +67172,8 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 63b6835c659647e099acf40df34dfae8, type: 3}
   m_Name:
-  m_EditorClassIdentifier: Assembly-CSharp::PowerPelletController
-  ghosts:
+  m_EditorClassIdentifier: Assembly-CSharp::pp
+  gh:
   - target: {fileID: 534102689}
     controller: {fileID: 9100000, guid: 7b28b93516fb50f589464cd7361d1d9d, type: 2}
   - target: {fileID: 1019331937}
@@ -67183,8 +67183,8 @@ MonoBehaviour:
   - target: {fileID: 1053939959}
     controller: {fileID: 9100000, guid: fa0b6d97a790558c8b0e7d5fadbec9ab, type: 2}
   hud: {fileID: 274794047}
-  audioManager: {fileID: 2132831594}
-  player: {fileID: 3700000001}
+  audMgr: {fileID: 2132831594}
+  pc: {fileID: 3700000001}
 --- !u!225 &274794052
 CanvasGroup:
   m_ObjectHideFlags: 0

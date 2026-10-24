@@ -3,38 +3,38 @@ using UnityEngine;
 [DefaultExecutionOrder(100)]
 public class CherryController : MonoBehaviour
 {
-    [SerializeField] private SpriteRenderer bonusPrefab;
-    [SerializeField] private Transform gridOrigin;
-    [SerializeField] private Camera gameCamera;
-    [SerializeField] private Rect levelBounds = new Rect(-0.0625f, -3.5625f, 3.5f, 3.625f);
-    [SerializeField, Min(0.01f)] private float moveSpeed = 0.625f;
-    [SerializeField] private PacStudentController player;
-    [SerializeField] private InGameHUDController hud;
-    [SerializeField] private AudioClip collectClip;
+    [SerializeField] private SpriteRenderer bnPrefab;
+    [SerializeField] private Transform gridOrg;
+    [SerializeField] private Camera cam;
+    [SerializeField] private Rect lvlBounds = new Rect(-0.0625f, -3.5625f, 3.5f, 3.625f);
+    [SerializeField, Min(0.01f)] private float moveSpd = 0.625f;
+    [SerializeField] private PacStudentController pc;
+    [SerializeField] private hudc hud;
+    [SerializeField] private AudioClip collectSfx;
 
-    private const float SpawnDelay = 5f;
-    private const int BonusSortingOrder = 100;
+    private const float SpawnWait = 5f;
+    private const int BonusOrder = 100;
 
-    private SpriteRenderer activeBonus;
-    private SpriteMask visibilityMask;
-    private Sprite maskSprite;
-    private Vector3 startPosition;
-    private Vector3 endPosition;
-    private float spawnElapsed;
-    private float movementElapsed;
-    private float movementDuration;
-    private float previousPerimeterPosition = -1f;
-    private bool hadActiveBonus;
-    private AudioSource collectAudio;
-    private Vector3 previousPlayerPosition;
-    private int previousTeleportVersion;
-    private Collider2D playerCollider;
+    private SpriteRenderer activeBn;
+    private SpriteMask visMask;
+    private Sprite maskSpr;
+    private Vector3 startPos;
+    private Vector3 endPos;
+    private float spawnT;
+    private float moveT;
+    private float moveDur;
+    private float prevPerimPos = -1f;
+    private bool hadBn;
+    private AudioSource collectAud;
+    private Vector3 prevPcPos;
+    private int prevTpVer;
+    private Collider2D pcCol;
 
     private void Start()
     {
-        if (bonusPrefab == null || bonusPrefab.sprite == null || gridOrigin == null ||
-            gameCamera == null || moveSpeed <= 0f ||
-            levelBounds.width <= 0f || levelBounds.height <= 0f)
+        if (bnPrefab == null || bnPrefab.sprite == null || gridOrg == null ||
+            cam == null || moveSpd <= 0f ||
+            lvlBounds.width <= 0f || lvlBounds.height <= 0f)
         {
             Debug.LogError(
                 "Bonus needs its popcorn prefab, grid origin, camera, positive map bounds and movement speed.",
@@ -47,13 +47,13 @@ public class CherryController : MonoBehaviour
 
         CreateVisibilityMask();
 
-        collectAudio = gameObject.AddComponent<AudioSource>();
-        collectAudio.playOnAwake = false;
-        collectAudio.spatialBlend = 0f;
+        collectAud = gameObject.AddComponent<AudioSource>();
+        collectAud.playOnAwake = false;
+        collectAud.spatialBlend = 0f;
 
-        if (player != null)
+        if (pc != null)
         {
-            playerCollider = player.GetComponent<Collider2D>();
+            pcCol = pc.GetComponent<Collider2D>();
         }
 
         RememberPlayerPosition();
@@ -61,34 +61,34 @@ public class CherryController : MonoBehaviour
 
     private void Update()
     {
-        if (hud.IsGameOver)
+        if (hud.GameOver)
         {
             return;
         }
 
-        SpriteRenderer previousBonus = activeBonus;
-        Vector3 previousBonusPosition;
+        SpriteRenderer prevBn = activeBn;
+        Vector3 prevBnPos;
 
-        if (previousBonus != null)
+        if (prevBn != null)
         {
-            previousBonusPosition = previousBonus.transform.position;
+            prevBnPos = prevBn.transform.position;
         }
         else
         {
-            previousBonusPosition = Vector3.zero;
+            prevBnPos = Vector3.zero;
         }
 
         AdvanceBonus(Time.deltaTime);
 
-        if (activeBonus != null && player != null && player.CanInteract)
+        if (activeBn != null && pc != null && pc.CanAct)
         {
-            if (previousBonus == activeBonus)
+            if (prevBn == activeBn)
             {
-                CheckPlayerCollision(previousBonusPosition);
+                CheckPlayerCollision(prevBnPos);
             }
             else
             {
-                CheckPlayerCollision(activeBonus.transform.position);
+                CheckPlayerCollision(activeBn.transform.position);
             }
         }
 
@@ -97,117 +97,117 @@ public class CherryController : MonoBehaviour
 
     private void RememberPlayerPosition()
     {
-        if (player == null)
+        if (pc == null)
         {
             return;
         }
 
-        previousPlayerPosition = player.transform.position;
-        previousTeleportVersion = player.TeleportVersion;
+        prevPcPos = pc.transform.position;
+        prevTpVer = pc.TpVer;
     }
 
-    private void CheckPlayerCollision(Vector3 previousBonusPosition)
+    private void CheckPlayerCollision(Vector3 prevBnPos)
     {
-        Vector3 playerPosition = player.transform.position;
-        Vector3 localPlayerPosition = gridOrigin.InverseTransformPoint(playerPosition);
+        Vector3 pcPos = pc.transform.position;
+        Vector3 localPlayerPos = gridOrg.InverseTransformPoint(pcPos);
 
-        if (!levelBounds.Contains(localPlayerPosition))
+        if (!lvlBounds.Contains(localPlayerPos))
         {
             return;
         }
 
-        Vector2 relativeEnd = activeBonus.transform.position - playerPosition;
-        Vector2 relativeStart;
+        Vector2 relEnd = activeBn.transform.position - pcPos;
+        Vector2 relStart;
 
-        if (previousTeleportVersion == player.TeleportVersion)
+        if (prevTpVer == pc.TpVer)
         {
-            relativeStart = previousBonusPosition - previousPlayerPosition;
+            relStart = prevBnPos - prevPcPos;
         }
         else
         {
-            relativeStart = relativeEnd;
+            relStart = relEnd;
         }
 
-        Vector2 motion = relativeEnd - relativeStart;
-        float fraction;
+        Vector2 motion = relEnd - relStart;
+        float frac;
 
         if (motion.sqrMagnitude > 0f)
         {
-            float closestPoint = -Vector2.Dot(relativeStart, motion);
-            fraction = Mathf.Clamp01(closestPoint / motion.sqrMagnitude);
+            float closePt = -Vector2.Dot(relStart, motion);
+            frac = Mathf.Clamp01(closePt / motion.sqrMagnitude);
         }
         else
         {
-            fraction = 0f;
+            frac = 0f;
         }
 
-        float playerRadius;
+        float pcRad;
 
-        if (playerCollider != null)
+        if (pcCol != null)
         {
-            playerRadius = Mathf.Min(
-                playerCollider.bounds.extents.x,
-                playerCollider.bounds.extents.y
+            pcRad = Mathf.Min(
+                pcCol.bounds.extents.x,
+                pcCol.bounds.extents.y
             );
         }
         else
         {
-            playerRadius = 0f;
+            pcRad = 0f;
         }
 
-        float bonusRadius = Mathf.Min(
-            activeBonus.bounds.extents.x,
-            activeBonus.bounds.extents.y
+        float bnRad = Mathf.Min(
+            activeBn.bounds.extents.x,
+            activeBn.bounds.extents.y
         );
 
-        float radius = bonusRadius + playerRadius;
-        Vector2 closestPosition = relativeStart + motion * fraction;
+        float radius = bnRad + pcRad;
+        Vector2 closePos = relStart + motion * frac;
 
-        if (closestPosition.sqrMagnitude > radius * radius)
+        if (closePos.sqrMagnitude > radius * radius)
         {
             return;
         }
 
-        activeBonus.gameObject.SetActive(false);
-        Destroy(activeBonus.gameObject);
+        activeBn.gameObject.SetActive(false);
+        Destroy(activeBn.gameObject);
 
-        activeBonus = null;
-        hadActiveBonus = false;
-        spawnElapsed = 0f;
+        activeBn = null;
+        hadBn = false;
+        spawnT = 0f;
 
         if (hud != null)
         {
             hud.AddScore(100);
         }
 
-        if (collectAudio != null && collectClip != null)
+        if (collectAud != null && collectSfx != null)
         {
-            collectAudio.PlayOneShot(collectClip);
+            collectAud.PlayOneShot(collectSfx);
         }
     }
 
-    private void AdvanceBonus(float deltaTime)
+    private void AdvanceBonus(float dt)
     {
-        float remainingTime = deltaTime;
+        float timeLeft = dt;
 
-        if (activeBonus == null)
+        if (activeBn == null)
         {
-            if (hadActiveBonus)
+            if (hadBn)
             {
-                hadActiveBonus = false;
-                spawnElapsed = 0f;
+                hadBn = false;
+                spawnT = 0f;
                 return;
             }
 
-            float waitingTime = Mathf.Min(
-                remainingTime,
-                SpawnDelay - spawnElapsed
+            float waitT = Mathf.Min(
+                timeLeft,
+                SpawnWait - spawnT
             );
 
-            spawnElapsed = spawnElapsed + waitingTime;
-            remainingTime = remainingTime - waitingTime;
+            spawnT = spawnT + waitT;
+            timeLeft = timeLeft - waitT;
 
-            if (spawnElapsed < SpawnDelay)
+            if (spawnT < SpawnWait)
             {
                 return;
             }
@@ -215,90 +215,90 @@ public class CherryController : MonoBehaviour
             SpawnBonus();
         }
 
-        movementElapsed = movementElapsed + remainingTime;
+        moveT = moveT + timeLeft;
 
-        Vector3 localPosition = Vector3.Lerp(
-            startPosition,
-            endPosition,
-            movementElapsed / movementDuration
+        Vector3 localPos = Vector3.Lerp(
+            startPos,
+            endPos,
+            moveT / moveDur
         );
 
-        activeBonus.transform.position = gridOrigin.TransformPoint(localPosition);
+        activeBn.transform.position = gridOrg.TransformPoint(localPos);
 
-        if (movementElapsed >= movementDuration)
+        if (moveT >= moveDur)
         {
-            Destroy(activeBonus.gameObject);
+            Destroy(activeBn.gameObject);
 
-            activeBonus = null;
-            hadActiveBonus = false;
-            spawnElapsed = 0f;
+            activeBn = null;
+            hadBn = false;
+            spawnT = 0f;
         }
     }
 
     private void SpawnBonus()
     {
-        float spriteRadius = bonusPrefab.sprite.bounds.extents.magnitude;
+        float sprRad = bnPrefab.sprite.bounds.extents.magnitude;
 
         float scale = Mathf.Max(
-            Mathf.Abs(bonusPrefab.transform.localScale.x),
-            Mathf.Abs(bonusPrefab.transform.localScale.y)
+            Mathf.Abs(bnPrefab.transform.localScale.x),
+            Mathf.Abs(bnPrefab.transform.localScale.y)
         );
 
-        float margin = spriteRadius * scale + 0.0625f;
-        Rect spawnBounds = ExpandBounds(levelBounds, margin);
+        float margin = sprRad * scale + 0.0625f;
+        Rect spawnRect = ExpandBounds(lvlBounds, margin);
 
-        float perimeterPosition = Random.value;
+        float perimPos = Random.value;
 
-        if (Mathf.Abs(perimeterPosition - previousPerimeterPosition) < 0.001f)
+        if (Mathf.Abs(perimPos - prevPerimPos) < 0.001f)
         {
-            perimeterPosition = Mathf.Repeat(perimeterPosition + 0.5f, 1f);
+            perimPos = Mathf.Repeat(perimPos + 0.5f, 1f);
         }
 
-        previousPerimeterPosition = perimeterPosition;
-        startPosition = PointOnPerimeter(spawnBounds, perimeterPosition);
+        prevPerimPos = perimPos;
+        startPos = PointOnPerimeter(spawnRect, perimPos);
 
-        Vector2 direction = levelBounds.center - (Vector2)startPosition;
-        direction = direction.normalized;
+        Vector2 dir = lvlBounds.center - (Vector2)startPos;
+        dir = dir.normalized;
 
-        Rect cameraBounds = CameraBoundsInGrid();
+        Rect camBounds = CameraBoundsInGrid();
 
-        float xMin = Mathf.Min(levelBounds.xMin, cameraBounds.xMin);
-        float yMin = Mathf.Min(levelBounds.yMin, cameraBounds.yMin);
-        float xMax = Mathf.Max(levelBounds.xMax, cameraBounds.xMax);
-        float yMax = Mathf.Max(levelBounds.yMax, cameraBounds.yMax);
+        float xMin = Mathf.Min(lvlBounds.xMin, camBounds.xMin);
+        float yMin = Mathf.Min(lvlBounds.yMin, camBounds.yMin);
+        float xMax = Mathf.Max(lvlBounds.xMax, camBounds.xMax);
+        float yMax = Mathf.Max(lvlBounds.yMax, camBounds.yMax);
 
-        Rect combinedBounds = Rect.MinMaxRect(xMin, yMin, xMax, yMax);
-        Rect exitBounds = ExpandBounds(combinedBounds, margin);
+        Rect allBounds = Rect.MinMaxRect(xMin, yMin, xMax, yMax);
+        Rect outBounds = ExpandBounds(allBounds, margin);
 
-        float exitDistance = DistanceToEdge(
-            exitBounds,
-            levelBounds.center,
-            direction
+        float exitDist = DistanceToEdge(
+            outBounds,
+            lvlBounds.center,
+            dir
         );
 
-        endPosition = levelBounds.center + direction * exitDistance;
+        endPos = lvlBounds.center + dir * exitDist;
 
-        Vector3 worldStart = gridOrigin.TransformPoint(startPosition);
-        Vector3 worldEnd = gridOrigin.TransformPoint(endPosition);
+        Vector3 worldA = gridOrg.TransformPoint(startPos);
+        Vector3 worldB = gridOrg.TransformPoint(endPos);
 
-        movementDuration = Vector3.Distance(worldStart, worldEnd) / moveSpeed;
-        movementElapsed = 0f;
+        moveDur = Vector3.Distance(worldA, worldB) / moveSpd;
+        moveT = 0f;
 
-        activeBonus = Instantiate(bonusPrefab, transform);
-        activeBonus.name = "MovingBonus_Popcorn";
-        activeBonus.transform.position = gridOrigin.TransformPoint(startPosition);
-        activeBonus.sortingLayerID = 0;
-        activeBonus.sortingOrder = BonusSortingOrder;
-        activeBonus.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
+        activeBn = Instantiate(bnPrefab, transform);
+        activeBn.name = "MovingBonus_Popcorn";
+        activeBn.transform.position = gridOrg.TransformPoint(startPos);
+        activeBn.sortingLayerID = 0;
+        activeBn.sortingOrder = BonusOrder;
+        activeBn.maskInteraction = SpriteMaskInteraction.VisibleInsideMask;
 
-        hadActiveBonus = true;
+        hadBn = true;
     }
 
     private void CreateVisibilityMask()
     {
         Texture2D texture = Texture2D.whiteTexture;
 
-        Rect textureBounds = new Rect(
+        Rect texBounds = new Rect(
             0f,
             0f,
             texture.width,
@@ -307,48 +307,48 @@ public class CherryController : MonoBehaviour
 
         Vector2 pivot = new Vector2(0.5f, 0.5f);
 
-        maskSprite = Sprite.Create(texture, textureBounds, pivot, 1f);
-        maskSprite.name = "BonusMapBoundsMask";
+        maskSpr = Sprite.Create(texture, texBounds, pivot, 1f);
+        maskSpr.name = "BonusMapBoundsMask";
 
-        GameObject maskObject = new GameObject("BonusVisibilityMask");
+        GameObject maskObj = new GameObject("BonusVisibilityMask");
 
-        maskObject.transform.SetParent(gridOrigin, false);
-        maskObject.transform.localPosition = levelBounds.center;
+        maskObj.transform.SetParent(gridOrg, false);
+        maskObj.transform.localPosition = lvlBounds.center;
 
-        float scaleX = levelBounds.width / maskSprite.bounds.size.x;
-        float scaleY = levelBounds.height / maskSprite.bounds.size.y;
+        float scaleX = lvlBounds.width / maskSpr.bounds.size.x;
+        float scaleY = lvlBounds.height / maskSpr.bounds.size.y;
 
-        maskObject.transform.localScale = new Vector3(scaleX, scaleY, 1f);
+        maskObj.transform.localScale = new Vector3(scaleX, scaleY, 1f);
 
-        visibilityMask = maskObject.AddComponent<SpriteMask>();
-        visibilityMask.sprite = maskSprite;
-        visibilityMask.alphaCutoff = 0.5f;
-        visibilityMask.isCustomRangeActive = true;
-        visibilityMask.backSortingLayerID = 0;
-        visibilityMask.frontSortingLayerID = 0;
-        visibilityMask.backSortingOrder = BonusSortingOrder - 1;
-        visibilityMask.frontSortingOrder = BonusSortingOrder;
+        visMask = maskObj.AddComponent<SpriteMask>();
+        visMask.sprite = maskSpr;
+        visMask.alphaCutoff = 0.5f;
+        visMask.isCustomRangeActive = true;
+        visMask.backSortingLayerID = 0;
+        visMask.frontSortingLayerID = 0;
+        visMask.backSortingOrder = BonusOrder - 1;
+        visMask.frontSortingOrder = BonusOrder;
     }
 
     private Rect CameraBoundsInGrid()
     {
-        Vector3 cameraOffset = gridOrigin.position - gameCamera.transform.position;
+        Vector3 camOffset = gridOrg.position - cam.transform.position;
 
         float depth = Vector3.Dot(
-            cameraOffset,
-            gameCamera.transform.forward
+            camOffset,
+            cam.transform.forward
         );
 
-        Vector3 lowerWorld = gameCamera.ViewportToWorldPoint(
+        Vector3 lowerW = cam.ViewportToWorldPoint(
             new Vector3(0f, 0f, depth)
         );
 
-        Vector3 upperWorld = gameCamera.ViewportToWorldPoint(
+        Vector3 upperW = cam.ViewportToWorldPoint(
             new Vector3(1f, 1f, depth)
         );
 
-        Vector3 lower = gridOrigin.InverseTransformPoint(lowerWorld);
-        Vector3 upper = gridOrigin.InverseTransformPoint(upperWorld);
+        Vector3 lower = gridOrg.InverseTransformPoint(lowerW);
+        Vector3 upper = gridOrg.InverseTransformPoint(upperW);
 
         float xMin = Mathf.Min(lower.x, upper.x);
         float yMin = Mathf.Min(lower.y, upper.y);
@@ -368,9 +368,9 @@ public class CherryController : MonoBehaviour
         return Rect.MinMaxRect(xMin, yMin, xMax, yMax);
     }
 
-    private static Vector2 PointOnPerimeter(Rect bounds, float position)
+    private static Vector2 PointOnPerimeter(Rect bounds, float pos)
     {
-        float distance = position * 2f * (bounds.width + bounds.height);
+        float distance = pos * 2f * (bounds.width + bounds.height);
 
         if (distance < bounds.width)
         {
@@ -399,20 +399,20 @@ public class CherryController : MonoBehaviour
     private static float DistanceToEdge(
         Rect bounds,
         Vector2 origin,
-        Vector2 direction
+        Vector2 dir
     )
     {
-        float horizontal;
+        float horiz;
 
-        if (Mathf.Abs(direction.x) < 0.000001f)
+        if (Mathf.Abs(dir.x) < 0.000001f)
         {
-            horizontal = float.PositiveInfinity;
+            horiz = float.PositiveInfinity;
         }
         else
         {
             float edgeX;
 
-            if (direction.x > 0f)
+            if (dir.x > 0f)
             {
                 edgeX = bounds.xMax;
             }
@@ -421,12 +421,12 @@ public class CherryController : MonoBehaviour
                 edgeX = bounds.xMin;
             }
 
-            horizontal = (edgeX - origin.x) / direction.x;
+            horiz = (edgeX - origin.x) / dir.x;
         }
 
         float vertical;
 
-        if (Mathf.Abs(direction.y) < 0.000001f)
+        if (Mathf.Abs(dir.y) < 0.000001f)
         {
             vertical = float.PositiveInfinity;
         }
@@ -434,7 +434,7 @@ public class CherryController : MonoBehaviour
         {
             float edgeY;
 
-            if (direction.y > 0f)
+            if (dir.y > 0f)
             {
                 edgeY = bounds.yMax;
             }
@@ -443,47 +443,47 @@ public class CherryController : MonoBehaviour
                 edgeY = bounds.yMin;
             }
 
-            vertical = (edgeY - origin.y) / direction.y;
+            vertical = (edgeY - origin.y) / dir.y;
         }
 
-        return Mathf.Min(horizontal, vertical);
+        return Mathf.Min(horiz, vertical);
     }
 
     private void OnEnable()
     {
-        if (visibilityMask != null)
+        if (visMask != null)
         {
-            visibilityMask.enabled = true;
+            visMask.enabled = true;
         }
     }
 
     private void OnDisable()
     {
-        if (activeBonus != null)
+        if (activeBn != null)
         {
-            Destroy(activeBonus.gameObject);
+            Destroy(activeBn.gameObject);
         }
 
-        activeBonus = null;
-        hadActiveBonus = false;
-        spawnElapsed = 0f;
+        activeBn = null;
+        hadBn = false;
+        spawnT = 0f;
 
-        if (visibilityMask != null)
+        if (visMask != null)
         {
-            visibilityMask.enabled = false;
+            visMask.enabled = false;
         }
     }
 
     private void OnDestroy()
     {
-        if (visibilityMask != null)
+        if (visMask != null)
         {
-            Destroy(visibilityMask.gameObject);
+            Destroy(visMask.gameObject);
         }
 
-        if (maskSprite != null)
+        if (maskSpr != null)
         {
-            Destroy(maskSprite);
+            Destroy(maskSpr);
         }
     }
 }
