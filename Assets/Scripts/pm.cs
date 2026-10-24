@@ -5,7 +5,6 @@ public class pm : MonoBehaviour
     public Transform[] points;
     public float speed = 0.15f;
 
-    [Tooltip("勾选：原地循环展示四向行走和死亡动画；不勾选：沿路点连续移动。")]
     public bool previewAnims;
 
     private int curPoint;
