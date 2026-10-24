@@ -5,19 +5,19 @@ using UnityEngine;
 public class GhostController : MonoBehaviour
 {
     public int Number { get; private set; }
-    public bool HasExited { get; private set; }
-    public Vector2Int CurrentCell { get; private set; }
-    public Vector2Int PreviousCell { get; private set; }
-    public Vector2Int TargetCell { get; private set; }
-    public bool IsMoving { get; private set; }
+    public bool Exited { get; private set; }
+    public Vector2Int CurCell { get; private set; }
+    public Vector2Int PrevCell { get; private set; }
+    public Vector2Int TgtCell { get; private set; }
+    public bool Moving { get; private set; }
 
     public float Speed
     {
         get
         {
-            float speed = player.MovementSpeed * 0.9f;
+            float speed = pc.MoveSpd * 0.9f;
 
-            if (states.IsNormal(gameObject))
+            if (ppc.IsNormal(gameObject))
             {
                 return speed * 1f;
             }
@@ -26,19 +26,19 @@ public class GhostController : MonoBehaviour
         }
     }
 
-    private PacStudentController player;
-    private PowerPelletController states;
-    private Animator animator;
-    private Vector3 spawnPosition;
-    private Vector3 segmentStart;
-    private Vector3 segmentEnd;
-    private float segmentTravel;
-    private float segmentLength;
-    private bool returningHome;
+    private PacStudentController pc;
+    private pp ppc;
+    private Animator anim;
+    private Vector3 spawnPos;
+    private Vector3 segStart;
+    private Vector3 segEnd;
+    private float segTravel;
+    private float segLength;
+    private bool goingHome;
 
-    private readonly List<Vector2Int> clockwiseRoute = new List<Vector2Int>();
+    private readonly List<Vector2Int> patrol = new List<Vector2Int>();
 
-    private static readonly Vector2Int[] Directions =
+    private static readonly Vector2Int[] moveDirs =
     {
         Vector2Int.up,
         Vector2Int.right,
@@ -49,14 +49,14 @@ public class GhostController : MonoBehaviour
     public void Initialize(
         int number,
         PacStudentController pacStudent,
-        PowerPelletController controller
+        pp controller
     )
     {
         Number = number;
-        player = pacStudent;
-        states = controller;
-        animator = GetComponent<Animator>();
-        spawnPosition = transform.position;
+        pc = pacStudent;
+        ppc = controller;
+        anim = GetComponent<Animator>();
+        spawnPos = transform.position;
 
         BuildClockwiseRoute();
         ResetMovement();
@@ -64,16 +64,16 @@ public class GhostController : MonoBehaviour
 
     public void ResetMovement()
     {
-        transform.position = spawnPosition;
+        transform.position = spawnPos;
 
-        CurrentCell = player.WorldToCell(spawnPosition);
-        PreviousCell = CurrentCell;
-        TargetCell = CurrentCell;
+        CurCell = pc.WorldToCell(spawnPos);
+        PrevCell = CurCell;
+        TgtCell = CurCell;
 
-        HasExited = false;
-        returningHome = false;
-        IsMoving = false;
-        segmentTravel = 0f;
+        Exited = false;
+        goingHome = false;
+        Moving = false;
+        segTravel = 0f;
     }
 
     private void Update()
@@ -81,162 +81,162 @@ public class GhostController : MonoBehaviour
         AdvanceMovement(Time.deltaTime);
     }
 
-    private void AdvanceMovement(float deltaTime)
+    private void AdvanceMovement(float dt)
     {
-        if (states == null || !states.CanMoveGhosts)
+        if (ppc == null || !ppc.CanMoveGh)
         {
             return;
         }
 
-        animator.speed = 1f;
+        anim.speed = 1f;
 
-        float remaining = deltaTime;
+        float timeLeft = dt;
 
-        while (remaining > 0f && states.CanMoveGhosts)
+        while (timeLeft > 0f && ppc.CanMoveGh)
         {
-            bool wasDead = states.IsDead(gameObject);
+            bool deadBefore = ppc.IsDead(gameObject);
 
-            if (wasDead)
+            if (deadBefore)
             {
-                if (!returningHome)
+                if (!goingHome)
                 {
-                    returningHome = true;
-                    BeginSegment(spawnPosition);
+                    goingHome = true;
+                    BeginSegment(spawnPos);
                 }
             }
-            else if (!IsMoving)
+            else if (!Moving)
             {
-                if (!HasExited)
+                if (!Exited)
                 {
-                    TargetCell = ChooseExitCell();
+                    TgtCell = ChooseExitCell();
                 }
                 else
                 {
-                    TargetCell = ChooseNextCell(CurrentCell, PreviousCell);
+                    TgtCell = ChooseNextCell(CurCell, PrevCell);
                 }
 
-                BeginSegment(player.CellToWorld(TargetCell));
+                BeginSegment(pc.CellToWorld(TgtCell));
             }
 
             float speed = Speed;
-            float distanceLeft = Mathf.Max(0f, segmentLength - segmentTravel);
-            float stepTime = Mathf.Min(remaining, distanceLeft / speed);
+            float distLeft = Mathf.Max(0f, segLength - segTravel);
+            float moveTime = Mathf.Min(timeLeft, distLeft / speed);
 
-            segmentTravel = Mathf.Min(
-                segmentLength,
-                segmentTravel + speed * stepTime
+            segTravel = Mathf.Min(
+                segLength,
+                segTravel + speed * moveTime
             );
 
-            remaining = remaining - stepTime;
+            timeLeft = timeLeft - moveTime;
 
-            Vector3 previousPosition = transform.position;
+            Vector3 prevPos = transform.position;
 
-            if (segmentLength > 0f)
+            if (segLength > 0f)
             {
                 transform.position = Vector3.Lerp(
-                    segmentStart,
-                    segmentEnd,
-                    segmentTravel / segmentLength
+                    segStart,
+                    segEnd,
+                    segTravel / segLength
                 );
             }
             else
             {
-                transform.position = segmentEnd;
+                transform.position = segEnd;
             }
 
-            if (segmentTravel >= segmentLength)
+            if (segTravel >= segLength)
             {
-                transform.position = segmentEnd;
-                IsMoving = false;
+                transform.position = segEnd;
+                Moving = false;
 
-                if (returningHome)
+                if (goingHome)
                 {
-                    states.RestoreAtHome(gameObject);
+                    ppc.RestoreAtHome(gameObject);
                     ResetMovement();
                 }
                 else
                 {
-                    PreviousCell = CurrentCell;
-                    CurrentCell = TargetCell;
+                    PrevCell = CurCell;
+                    CurCell = TgtCell;
 
-                    if (!HasExited &&
-                        (CurrentCell.y == 11 || CurrentCell.y == 17))
+                    if (!Exited &&
+                        (CurCell.y == 11 || CurCell.y == 17))
                     {
-                        HasExited = true;
+                        Exited = true;
                     }
                 }
             }
 
-            if (!wasDead && !states.IsDead(gameObject))
+            if (!deadBefore && !ppc.IsDead(gameObject))
             {
-                states.CheckGhostContact(
+                ppc.CheckGhostContact(
                     gameObject,
-                    previousPosition,
+                    prevPos,
                     transform.position
                 );
             }
 
-            if (!states.CanMoveGhosts)
+            if (!ppc.CanMoveGh)
             {
                 return;
             }
 
-            if (stepTime == 0f && IsMoving)
+            if (moveTime == 0f && Moving)
             {
                 return;
             }
         }
     }
 
-    private void BeginSegment(Vector3 end)
+    private void BeginSegment(Vector3 endPos)
     {
-        segmentStart = transform.position;
-        segmentEnd = new Vector3(end.x, end.y, spawnPosition.z);
-        segmentLength = Vector3.Distance(segmentStart, segmentEnd);
-        segmentTravel = 0f;
-        IsMoving = true;
+        segStart = transform.position;
+        segEnd = new Vector3(endPos.x, endPos.y, spawnPos.z);
+        segLength = Vector3.Distance(segStart, segEnd);
+        segTravel = 0f;
+        Moving = true;
     }
 
     private Vector2Int ChooseExitCell()
     {
-        int exitColumn;
+        int exitCol;
 
         if (Number % 2 == 1)
         {
-            exitColumn = 13;
+            exitCol = 13;
         }
         else
         {
-            exitColumn = 14;
+            exitCol = 14;
         }
 
-        if (CurrentCell.x != exitColumn)
+        if (CurCell.x != exitCol)
         {
-            int xDirection;
+            int xDir;
 
-            if (CurrentCell.x < exitColumn)
+            if (CurCell.x < exitCol)
             {
-                xDirection = 1;
+                xDir = 1;
             }
             else
             {
-                xDirection = -1;
+                xDir = -1;
             }
 
-            return CurrentCell + new Vector2Int(xDirection, 0);
+            return CurCell + new Vector2Int(xDir, 0);
         }
 
         if (Number % 2 == 1)
         {
-            return CurrentCell + Vector2Int.down;
+            return CurCell + Vector2Int.down;
         }
 
-        return CurrentCell + Vector2Int.up;
+        return CurCell + Vector2Int.up;
     }
 
     public bool IsValidCell(Vector2Int cell)
     {
-        if (!player.IsWalkable(cell))
+        if (!pc.IsWalkable(cell))
         {
             return false;
         }
@@ -260,27 +260,27 @@ public class GhostController : MonoBehaviour
         Vector2Int previous
     )
     {
-        List<Vector2Int> candidates = new List<Vector2Int>();
+        List<Vector2Int> opts = new List<Vector2Int>();
 
-        for (int i = 0; i < Directions.Length; i = i + 1)
+        for (int i = 0; i < moveDirs.Length; i = i + 1)
         {
-            Vector2Int direction = Directions[i];
-            Vector2Int next = cell + direction;
+            Vector2Int dir = moveDirs[i];
+            Vector2Int next = cell + dir;
 
             if (IsValidCell(next) && next != previous)
             {
-                candidates.Add(next);
+                opts.Add(next);
             }
         }
 
-        if (candidates.Count == 0 &&
+        if (opts.Count == 0 &&
             IsValidCell(previous) &&
             previous != cell)
         {
-            candidates.Add(previous);
+            opts.Add(previous);
         }
 
-        return candidates;
+        return opts;
     }
 
     private Vector2Int ChooseNextCell(
@@ -288,103 +288,103 @@ public class GhostController : MonoBehaviour
         Vector2Int previous
     )
     {
-        List<Vector2Int> candidates = LegalNeighbours(cell, previous);
+        List<Vector2Int> opts = LegalNeighbours(cell, previous);
 
-        if (candidates.Count == 0)
+        if (opts.Count == 0)
         {
             throw new System.InvalidOperationException(
                 "Ghost has no valid neighbouring cell: " + cell
             );
         }
 
-        bool normal = states.IsNormal(gameObject);
+        bool isNormal = ppc.IsNormal(gameObject);
 
-        if (normal && Number == 4)
+        if (isNormal && Number == 4)
         {
-            int bestDistance = int.MaxValue;
-            Vector2Int choice = candidates[0];
+            int bestDist = int.MaxValue;
+            Vector2Int pickCell = opts[0];
 
-            int routeIndex = clockwiseRoute.IndexOf(cell);
+            int routeIdx = patrol.IndexOf(cell);
 
-            if (routeIndex >= 0)
+            if (routeIdx >= 0)
             {
-                int nextIndex = (routeIndex + 1) % clockwiseRoute.Count;
-                Vector2Int clockwise = clockwiseRoute[nextIndex];
+                int nextIdx = (routeIdx + 1) % patrol.Count;
+                Vector2Int nextCell = patrol[nextIdx];
 
-                if (candidates.Contains(clockwise))
+                if (opts.Contains(nextCell))
                 {
-                    return clockwise;
+                    return nextCell;
                 }
             }
 
-            for (int i = 0; i < candidates.Count; i = i + 1)
+            for (int i = 0; i < opts.Count; i = i + 1)
             {
-                Vector2Int candidate = candidates[i];
-                int distance = DistanceToClockwiseRoute(candidate, cell);
+                Vector2Int option = opts[i];
+                int dist = DistanceToClockwiseRoute(option, cell);
 
-                if (distance < bestDistance)
+                if (dist < bestDist)
                 {
-                    bestDistance = distance;
-                    choice = candidate;
+                    bestDist = dist;
+                    pickCell = option;
                 }
             }
 
-            return choice;
+            return pickCell;
         }
 
-        if (normal && Number == 3)
+        if (isNormal && Number == 3)
         {
-            int randomIndex = Random.Range(0, candidates.Count);
-            return candidates[randomIndex];
+            int randIndex = Random.Range(0, opts.Count);
+            return opts[randIndex];
         }
 
-        bool approach = normal && Number == 2;
+        bool closer = isNormal && Number == 2;
 
-        Vector3 currentDifference =
-            player.CellToWorld(cell) - player.transform.position;
+        Vector3 curOffset =
+            pc.CellToWorld(cell) - pc.transform.position;
 
-        float currentDistance = currentDifference.sqrMagnitude;
+        float curDist = curOffset.sqrMagnitude;
 
-        List<Vector2Int> preferred = new List<Vector2Int>();
+        List<Vector2Int> prefCells = new List<Vector2Int>();
 
-        for (int i = 0; i < candidates.Count; i = i + 1)
+        for (int i = 0; i < opts.Count; i = i + 1)
         {
-            Vector2Int candidate = candidates[i];
+            Vector2Int option = opts[i];
 
-            Vector3 difference =
-                player.CellToWorld(candidate) - player.transform.position;
+            Vector3 offset =
+                pc.CellToWorld(option) - pc.transform.position;
 
-            float distance = difference.sqrMagnitude;
+            float dist = offset.sqrMagnitude;
 
-            if (approach)
+            if (closer)
             {
-                if (distance <= currentDistance + 0.000001f)
+                if (dist <= curDist + 0.000001f)
                 {
-                    preferred.Add(candidate);
+                    prefCells.Add(option);
                 }
             }
             else
             {
-                if (distance >= currentDistance - 0.000001f)
+                if (dist >= curDist - 0.000001f)
                 {
-                    preferred.Add(candidate);
+                    prefCells.Add(option);
                 }
             }
         }
 
-        List<Vector2Int> choices;
+        List<Vector2Int> finalOpts;
 
-        if (preferred.Count > 0)
+        if (prefCells.Count > 0)
         {
-            choices = preferred;
+            finalOpts = prefCells;
         }
         else
         {
-            choices = candidates;
+            finalOpts = opts;
         }
 
-        int choiceIndex = Random.Range(0, choices.Count);
-        return choices[choiceIndex];
+        int pickIndex = Random.Range(0, finalOpts.Count);
+        return finalOpts[pickIndex];
     }
 
     private int DistanceToClockwiseRoute(
@@ -392,44 +392,44 @@ public class GhostController : MonoBehaviour
         Vector2Int previous
     )
     {
-        Queue<(Vector2Int cell, Vector2Int previous, int distance)> queue =
+        Queue<(Vector2Int cell, Vector2Int previous, int distance)> searchQueue =
             new Queue<(Vector2Int cell, Vector2Int previous, int distance)>();
 
-        HashSet<(Vector2Int, Vector2Int)> visited =
+        HashSet<(Vector2Int, Vector2Int)> checkedStates =
             new HashSet<(Vector2Int, Vector2Int)>();
 
-        queue.Enqueue((start, previous, 0));
-        visited.Add((start, previous));
+        searchQueue.Enqueue((start, previous, 0));
+        checkedStates.Add((start, previous));
 
-        while (queue.Count > 0)
+        while (searchQueue.Count > 0)
         {
             (Vector2Int cell, Vector2Int previous, int distance) current =
-                queue.Dequeue();
+                searchQueue.Dequeue();
 
-            int index = clockwiseRoute.IndexOf(current.cell);
+            int routeIdx = patrol.IndexOf(current.cell);
 
-            if (index >= 0)
+            if (routeIdx >= 0)
             {
-                int nextIndex = (index + 1) % clockwiseRoute.Count;
+                int nextIdx = (routeIdx + 1) % patrol.Count;
 
-                if (clockwiseRoute[nextIndex] != current.previous)
+                if (patrol[nextIdx] != current.previous)
                 {
                     return current.distance;
                 }
             }
 
-            List<Vector2Int> neighbours = LegalNeighbours(
+            List<Vector2Int> nearCells = LegalNeighbours(
                 current.cell,
                 current.previous
             );
 
-            for (int i = 0; i < neighbours.Count; i = i + 1)
+            for (int i = 0; i < nearCells.Count; i = i + 1)
             {
-                Vector2Int next = neighbours[i];
+                Vector2Int next = nearCells[i];
 
-                if (visited.Add((next, current.cell)))
+                if (checkedStates.Add((next, current.cell)))
                 {
-                    queue.Enqueue((
+                    searchQueue.Enqueue((
                         next,
                         current.cell,
                         current.distance + 1
@@ -471,18 +471,18 @@ public class GhostController : MonoBehaviour
         {
             Vector2Int cell = corners[i];
 
-            int nextIndex = (i + 1) % corners.Length;
-            Vector2Int end = corners[nextIndex];
+            int nextIdx = (i + 1) % corners.Length;
+            Vector2Int end = corners[nextIdx];
 
-            int xDirection = System.Math.Sign(end.x - cell.x);
-            int yDirection = System.Math.Sign(end.y - cell.y);
+            int xDir = System.Math.Sign(end.x - cell.x);
+            int yDir = System.Math.Sign(end.y - cell.y);
 
-            Vector2Int direction = new Vector2Int(xDirection, yDirection);
+            Vector2Int dir = new Vector2Int(xDir, yDir);
 
             while (cell != end)
             {
-                clockwiseRoute.Add(cell);
-                cell = cell + direction;
+                patrol.Add(cell);
+                cell = cell + dir;
             }
         }
     }

@@ -1,35 +1,35 @@
 using UnityEngine;
 
-public class AudioManager : MonoBehaviour
+public class am : MonoBehaviour
 {
 public AudioSource intro;
-public AudioSource ghostnormal;
-public AudioSource eatpellet;
+public AudioSource ghNormal;
+public AudioSource eatPel;
 public AudioSource bonus;
 public AudioSource crush;
 public AudioSource dead;
-public AudioSource eatghost;
-public AudioSource ghostscared;
-public AudioSource ghostdead;
-public float introduration = 3f;
-private bool ghostsScared;
-private bool ghostsDead;
-private bool playerDying;
-private bool roundStarting;
+public AudioSource eatGh;
+public AudioSource ghScared;
+public AudioSource ghDead;
+public float introDur = 3f;
+private bool ghScaredOn;
+private bool ghAreDead;
+private bool pcDying;
+private bool roundStart;
 
     public void BeginRoundCountdown()
     {
-        roundStarting = true;
-        ghostnormal.Stop();
-        ghostscared.Stop();
-        if (ghostdead != null) ghostdead.Stop();
+        roundStart = true;
+        ghNormal.Stop();
+        ghScared.Stop();
+        if (ghDead != null) ghDead.Stop();
         intro.loop = true;
         intro.Play();
     }
 
     public void CompleteRoundCountdown()
     {
-        roundStarting = false;
+        roundStart = false;
         intro.Stop();
         intro.loop = false;
         RefreshGhostMusic();
@@ -37,24 +37,24 @@ private bool roundStarting;
 
     public void SetGhostScaredMusic(bool scared)
     {
-        ghostsScared = scared;
+        ghScaredOn = scared;
         RefreshGhostMusic();
     }
 
-    public void SetGhostDeadMusic(bool hasDeadGhost)
+    public void SetGhostDeadMusic(bool hasDeadGh)
     {
-        ghostsDead = hasDeadGhost;
+        ghAreDead = hasDeadGh;
         RefreshGhostMusic();
     }
 
     private void RefreshGhostMusic()
     {
-        if (playerDying || roundStarting) return;
+        if (pcDying || roundStart) return;
         intro.Stop();
-        AudioSource next = ghostsDead ? ghostdead : ghostsScared ? ghostscared : ghostnormal;
-        if (next != ghostnormal) ghostnormal.Stop();
-        if (next != ghostscared) ghostscared.Stop();
-        if (next != ghostdead && ghostdead != null) ghostdead.Stop();
+        AudioSource next = ghAreDead ? ghDead : ghScaredOn ? ghScared : ghNormal;
+        if (next != ghNormal) ghNormal.Stop();
+        if (next != ghScared) ghScared.Stop();
+        if (next != ghDead && ghDead != null) ghDead.Stop();
         if (next == null) return;
         next.loop = true;
         if (!next.isPlaying) next.Play();
@@ -62,31 +62,31 @@ private bool roundStarting;
 
     public void BeginPlayerDeath()
     {
-        playerDying = true;
+        pcDying = true;
         intro.Stop();
-        ghostnormal.Stop();
-        ghostscared.Stop();
-        if (ghostdead != null) ghostdead.Stop();
+        ghNormal.Stop();
+        ghScared.Stop();
+        if (ghDead != null) ghDead.Stop();
         dead.loop = false;
         dead.Play();
     }
 
     public void EndPlayerDeath()
     {
-        playerDying = false;
+        pcDying = false;
         dead.Stop();
         RefreshGhostMusic();
     }
       
     public void Playeatpellet()
     {
-        eatpellet.Play();
+        eatPel.Play();
     }
 
 
     public void Playeatghost()
     {
-        eatghost.Play();
+        eatGh.Play();
     }
 
 
@@ -110,6 +110,6 @@ private bool roundStarting;
 
     public void Playghostscared()
     {
-        ghostscared.Play();
+        ghScared.Play();
     }
 }

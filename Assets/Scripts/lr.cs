@@ -1,7 +1,7 @@
 using System.Globalization;
 using UnityEngine;
 
-public static class LevelRecords
+public static class lr
 {
     private static string ScoreKey(int level)
     {
@@ -20,14 +20,14 @@ public static class LevelRecords
 
     public static double LoadTime(int level)
     {
-        string savedTime = PlayerPrefs.GetString(TimeKey(level), "0");
-        double seconds;
+        string savedT = PlayerPrefs.GetString(TimeKey(level), "0");
+        double secs;
 
         bool validTime = double.TryParse(
-            savedTime,
+            savedT,
             NumberStyles.Float,
             CultureInfo.InvariantCulture,
-            out seconds
+            out secs
         );
 
         if (!validTime)
@@ -35,40 +35,40 @@ public static class LevelRecords
             return 0d;
         }
 
-        if (seconds < 0d || double.IsNaN(seconds) || double.IsInfinity(seconds))
+        if (secs < 0d || double.IsNaN(secs) || double.IsInfinity(secs))
         {
             return 0d;
         }
 
-        return seconds;
+        return secs;
     }
 
-    public static bool SaveIfBetter(int level, int score, double seconds)
+    public static bool SaveIfBetter(int level, int score, double secs)
     {
-        if (score < 0 || seconds < 0d)
+        if (score < 0 || secs < 0d)
         {
             return false;
         }
 
-        if (double.IsNaN(seconds) || double.IsInfinity(seconds))
+        if (double.IsNaN(secs) || double.IsInfinity(secs))
         {
             return false;
         }
 
-        int previousScore = LoadScore(level);
+        int prevScore = LoadScore(level);
 
         if (PlayerPrefs.HasKey(ScoreKey(level)))
         {
-            if (score < previousScore)
+            if (score < prevScore)
             {
                 return false;
             }
 
-            if (score == previousScore)
+            if (score == prevScore)
             {
-                double previousTime = LoadTime(level);
+                double prevTime = LoadTime(level);
 
-                if (seconds >= previousTime)
+                if (secs >= prevTime)
                 {
                     return false;
                 }
@@ -77,8 +77,8 @@ public static class LevelRecords
 
         PlayerPrefs.SetInt(ScoreKey(level), score);
 
-        string timeText = seconds.ToString("R", CultureInfo.InvariantCulture);
-        PlayerPrefs.SetString(TimeKey(level), timeText);
+        string timeTxt = secs.ToString("R", CultureInfo.InvariantCulture);
+        PlayerPrefs.SetString(TimeKey(level), timeTxt);
 
         PlayerPrefs.Save();
 
