@@ -14,9 +14,11 @@ public class PacStudentController : MonoBehaviour
     [SerializeField] private Transform ppRoot;
     [SerializeField] private pp ppc;
     [SerializeField] private am audMgr;
+    [SerializeField] private bool jumpOn;
 
     public int TpVer { get; private set; }
     public bool Dying { get; private set; }
+    public bool Jumping { get; private set; }
 
     public bool CanAct
     {
@@ -101,6 +103,9 @@ public class PacStudentController : MonoBehaviour
     private ParticleSystem deathFx;
     private float deathT;
     private float deathDur;
+    private float jumpT;
+    private SpriteRenderer spr;
+    private SpriteRenderer jumpSpr;
 
     private void Start()
     {
@@ -141,6 +146,19 @@ public class PacStudentController : MonoBehaviour
             anim.Play("right", 0, 0f);
             anim.Update(0f);
             anim.speed = 0f;
+        }
+
+        if (jumpOn)
+        {
+            spr = GetComponent<SpriteRenderer>();
+
+            GameObject obj = new GameObject("JumpSprite");
+            obj.transform.SetParent(transform, false);
+            jumpSpr = obj.AddComponent<SpriteRenderer>();
+            jumpSpr.sharedMaterial = spr.sharedMaterial;
+            jumpSpr.sortingLayerID = spr.sortingLayerID;
+            jumpSpr.sortingOrder = spr.sortingOrder + 1;
+            jumpSpr.enabled = false;
         }
 
         moveAud = GetComponent<AudioSource>();
@@ -259,7 +277,78 @@ public class PacStudentController : MonoBehaviour
             lastInput = Vector2Int.right;
         }
 
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            BeginJump();
+        }
+
+        AdvanceJump(Time.deltaTime);
         AdvanceMovement(Time.deltaTime);
+    }
+
+    private void BeginJump()
+    {
+        if (!jumpOn || Jumping || !CanAct)
+        {
+            return;
+        }
+
+        Jumping = true;
+        jumpT = 0f;
+    }
+
+    private void AdvanceJump(float dt)
+    {
+        if (!Jumping)
+        {
+            return;
+        }
+
+        jumpT = jumpT + dt;
+
+        if (jumpT >= 0.6f)
+        {
+            ResetJump();
+        }
+    }
+
+    private void LateUpdate()
+    {
+        if (jumpSpr == null)
+        {
+            return;
+        }
+
+        spr.forceRenderingOff = Jumping;
+        jumpSpr.enabled = Jumping;
+
+        if (Jumping)
+        {
+            jumpSpr.sprite = spr.sprite;
+            jumpSpr.color = spr.color;
+            jumpSpr.flipX = spr.flipX;
+            jumpSpr.flipY = spr.flipY;
+
+            float height = Mathf.Sin(jumpT / 0.6f * Mathf.PI) * cellSz * 1.5f;
+            Vector3 offset = gridOrg.TransformVector(new Vector3(0f, height, 0f));
+            jumpSpr.transform.position = transform.position + offset;
+        }
+    }
+
+    private void ResetJump()
+    {
+        Jumping = false;
+        jumpT = 0f;
+
+        if (spr != null)
+        {
+            spr.forceRenderingOff = false;
+        }
+
+        if (jumpSpr != null)
+        {
+            jumpSpr.enabled = false;
+        }
     }
 
     private void AdvanceMovement(float dt)
@@ -388,6 +477,7 @@ public class PacStudentController : MonoBehaviour
             return;
         }
 
+        ResetJump();
         Dying = true;
 
         hud.LoseLife();
@@ -771,6 +861,7 @@ public class PacStudentController : MonoBehaviour
 
     public void StopForGameOver()
     {
+        ResetJump();
         lerping = false;
         lastInput = Vector2Int.zero;
         currentInput = Vector2Int.zero;
@@ -790,6 +881,7 @@ public class PacStudentController : MonoBehaviour
 
     private void OnDisable()
     {
+        ResetJump();
         StopMovementFeedback();
 
         if (hitAud != null)

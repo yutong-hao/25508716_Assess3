@@ -90,6 +90,11 @@ public class pp : MonoBehaviour
             return false;
         }
 
+        if (pc.Jumping)
+        {
+            return true;
+        }
+
         Vector2 motion = end - start;
         Vector2 pcOffset = pc.transform.TransformVector(pcCol.offset);
 
@@ -159,7 +164,7 @@ public class pp : MonoBehaviour
 
     public void CheckGhostContact(GameObject target, Vector3 start, Vector3 end)
     {
-        if (!CanMoveGh || !pc.CanAct)
+        if (!CanMoveGh || !pc.CanAct || pc.Jumping)
         {
             return;
         }
