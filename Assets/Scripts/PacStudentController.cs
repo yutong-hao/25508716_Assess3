@@ -288,7 +288,17 @@ public class PacStudentController : MonoBehaviour
 
     private void BeginJump()
     {
-        if (!jumpOn || Jumping || !CanAct)
+        if (!jumpOn)
+        {
+            return;
+        }
+
+        if (Jumping)
+        {
+            return;
+        }
+
+        if (!CanAct)
         {
             return;
         }
@@ -299,16 +309,14 @@ public class PacStudentController : MonoBehaviour
 
     private void AdvanceJump(float dt)
     {
-        if (!Jumping)
+        if (Jumping)
         {
-            return;
-        }
+            jumpT = jumpT + dt;
 
-        jumpT = jumpT + dt;
-
-        if (jumpT >= 0.6f)
-        {
-            ResetJump();
+            if (jumpT >= 0.6f)
+            {
+                ResetJump();
+            }
         }
     }
 
@@ -319,19 +327,29 @@ public class PacStudentController : MonoBehaviour
             return;
         }
 
-        spr.forceRenderingOff = Jumping;
-        jumpSpr.enabled = Jumping;
-
         if (Jumping)
         {
+            spr.forceRenderingOff = true;
+            jumpSpr.enabled = true;
+
             jumpSpr.sprite = spr.sprite;
             jumpSpr.color = spr.color;
             jumpSpr.flipX = spr.flipX;
             jumpSpr.flipY = spr.flipY;
 
-            float height = Mathf.Sin(jumpT / 0.6f * Mathf.PI) * cellSz * 1.5f;
-            Vector3 offset = gridOrg.TransformVector(new Vector3(0f, height, 0f));
+            float time = jumpT / 0.6f;
+            float angle = time * Mathf.PI;
+            float height = Mathf.Sin(angle);
+            height = height * cellSz * 1.5f;
+
+            Vector3 offset = new Vector3(0f, height, 0f);
+            offset = gridOrg.TransformVector(offset);
             jumpSpr.transform.position = transform.position + offset;
+        }
+        else
+        {
+            spr.forceRenderingOff = false;
+            jumpSpr.enabled = false;
         }
     }
 
